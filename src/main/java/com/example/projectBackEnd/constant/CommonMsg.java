@@ -23,4 +23,8 @@ public class CommonMsg {
     public static final String EMPTY_GIFT_CREATION_DATE="Empty gift create date";
     public static final String USERNAME_IS_ALREADY_EXITED ="Username is already used !" ;
     public static final String EMAIL_IS_EXITED ="E-mail is already used" ;
+
+    public static final String EMPTY_CATEGORY_NAME = "Category name cannot be empty";
+    public static final String EMPTY_CATEGORY_DESCRIPTION = "Category description cannot be empty";
+
 }

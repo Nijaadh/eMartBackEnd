@@ -1,18 +1,16 @@
 package com.example.projectBackEnd.entity;
-
 import com.example.projectBackEnd.constant.CommonStatus;
-import lombok.Getter;
-import lombok.Setter;
-
+import lombok.*;
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
-@Getter
-@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Entity
-@Table(name = "Items")
-public class Items {
+@Table(name = "SubCategory")
+public class SubCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -21,24 +19,18 @@ public class Items {
     private String name;
 
     @Column
-    private Double unitPrice;
+    private String description;
 
     @Column
-    private String Description;
-
-    @Column
-    private String Category;
-
-    @Column( columnDefinition = "LONGTEXT")
     private String image;
 
-    @Column
+    @Enumerated(EnumType.STRING)
     private CommonStatus commonStatus;
 
-    @ManyToMany(mappedBy = "items")
-    private Set<Gift> gifts;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sub_category_id")
-    private SubCategory subCategory;
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @OneToMany(mappedBy = "subCategory", cascade = CascadeType.ALL)
+    private Set<Items> items = new HashSet<>();
 }
