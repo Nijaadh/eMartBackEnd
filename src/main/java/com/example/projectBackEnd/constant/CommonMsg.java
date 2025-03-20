@@ -27,4 +27,8 @@ public class CommonMsg {
     public static final String EMPTY_CATEGORY_NAME = "Category name cannot be empty";
     public static final String EMPTY_CATEGORY_DESCRIPTION = "Category description cannot be empty";
 
+    public static final String EMPTY_SUBCATEGORY_NAME = "SubCategory name cannot be empty";
+    public static final String EMPTY_SUBCATEGORY_DESCRIPTION = "SubCategory description cannot be empty";
+    public static final String EMPTY_CATEGORY_ID = "Category ID is required";
+
 }

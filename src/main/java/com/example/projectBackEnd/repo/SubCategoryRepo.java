@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface SubCategoryRepo extends JpaRepository<SubCategory, Long> {
     List<SubCategory> findByCategoryAndCommonStatus(Category category, CommonStatus status);
+
+    List<SubCategory> findByNameContainingIgnoreCase(String name);
 }
