@@ -59,4 +59,5 @@ public class CategoryController {
     public CommonResponse getSubcategoriesByCategoryId(@PathVariable Long id) {
         return categoryService.getSubcategoriesByCategoryId(id);
     }
+    //just a simple comment
 }
