@@ -9,6 +9,7 @@ import com.example.projectBackEnd.entity.Role;
 import com.example.projectBackEnd.entity.User;
 import com.example.projectBackEnd.repo.RoleRepo;
 import com.example.projectBackEnd.repo.UserRepo;
+import com.example.projectBackEnd.service.EmailService;
 import com.example.projectBackEnd.service.UserService;
 import com.example.projectBackEnd.util.CommonResponse;
 import com.example.projectBackEnd.util.CommonValidation;
@@ -27,12 +28,14 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final RoleRepo roleRepo;
+    private final EmailService emailService;
 
     @Autowired
-    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder, RoleRepo roleRepo) {
+    public UserServiceImpl(UserRepo userRepo, PasswordEncoder passwordEncoder, RoleRepo roleRepo,EmailService emailService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.roleRepo = roleRepo;
+        this.emailService = emailService;
     }
 
 
@@ -49,6 +52,7 @@ public class UserServiceImpl implements UserService {
 
             User user = castUserDtoToEntity(userDto);
             user = userRepo.save(user);
+            emailService.sendRegistrationEmail(user);
             commonResponse.setStatus(true);
             commonResponse.setPayload(Collections.singletonList(user));
         } catch (Exception e) {

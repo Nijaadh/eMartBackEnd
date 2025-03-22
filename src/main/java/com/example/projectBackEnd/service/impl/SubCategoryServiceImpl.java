@@ -49,8 +49,12 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
             SubCategory subCategory = castSubCategoryDtoToEntity(subCategoryDto);
             subCategory = subCategoryRepo.save(subCategory);
+
+            // Convert entity back to DTO before adding to payload
+            SubCategoryDto savedSubCategoryDto = castSubCategoryEntityToDto(subCategory);
+
             commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList(subCategory));
+            commonResponse.setPayload(Collections.singletonList(savedSubCategoryDto));
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in SubCategoryService -> addSubCategory()", e);
             commonResponse.setStatus(false);
@@ -257,16 +261,15 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     }
 
     private SubCategoryDto castSubCategoryEntityToDto(SubCategory subCategory) {
-        SubCategoryDto subCategoryDto = new SubCategoryDto();
-        subCategoryDto.setId(subCategory.getId());
-        subCategoryDto.setName(subCategory.getName());
-        subCategoryDto.setDescription(subCategory.getDescription());
-        subCategoryDto.setImage(subCategory.getImage());
-        subCategoryDto.setCommonStatus(subCategory.getCommonStatus());
+        SubCategoryDto dto = new SubCategoryDto();
+        dto.setId(subCategory.getId());
+        dto.setName(subCategory.getName());
+        dto.setDescription(subCategory.getDescription());
+        dto.setCommonStatus(subCategory.getCommonStatus());
         if (subCategory.getCategory() != null) {
-            subCategoryDto.setCategoryId(subCategory.getCategory().getId());
+            dto.setCategoryId(subCategory.getCategory().getId());
         }
-        return subCategoryDto;
+        return dto;
     }
 
     private ItemsDto castItemsEntityToDto(Items items) {

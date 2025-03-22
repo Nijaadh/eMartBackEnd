@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Ready for Delivery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #ff9800;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .shipping-details {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #ff9800;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Your Order is Ready!</h1>
+</div>
+<div class="content">
+    <p>Dear <span th:text="${userName}"></span>,</p>
+
+    <p>Great news! Your order #<span th:text="${orderId}"></span> is now ready for delivery.</p>
+
+    <div class="shipping-details">
+        <h3>Shipping Details:</h3>
+        <p><strong>Order ID:</strong> <span th:text="${orderId}"></span></p>
+        <p><strong>Shipping Address:</strong> <span th:text="${shippingAddress}"></span></p>
+    </div>
+
+    <p>Your package will be shipped soon. Thank you for shopping with us!</p>
+
+    <a class="button" th:href="@{'http://localhost:4200/order-details/' + ${orderId}}">Track Your Order</a>
+</div>
+<div class="footer">
+    <p>&copy; 2025 Gift Shop. All rights reserved.</p>
+    <p>This is an automated email, please do not reply.</p>
+</div>
+</body>
+</html>

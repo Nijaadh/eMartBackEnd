@@ -10,6 +10,7 @@ import com.example.projectBackEnd.entity.User;
 import com.example.projectBackEnd.repo.GiftRepo;
 import com.example.projectBackEnd.repo.ItemsRepo;
 import com.example.projectBackEnd.repo.UserRepo;
+import com.example.projectBackEnd.service.EmailService;
 import com.example.projectBackEnd.service.GiftService;
 import com.example.projectBackEnd.util.CommonResponse;
 import com.example.projectBackEnd.util.CommonValidation;
@@ -31,14 +32,15 @@ public class GiftServiceImpl implements GiftService {
 
     private final GiftRepo giftRepo;
     private final ItemsRepo itemsRepo;
-
+    private final EmailService emailService;
     private final UserRepo userRepo;
 
     @Autowired
-    public GiftServiceImpl(GiftRepo giftRepo, ItemsRepo itemsRepo, UserRepo userRepo) {
+    public GiftServiceImpl(GiftRepo giftRepo, ItemsRepo itemsRepo, UserRepo userRepo,EmailService emailService) {
         this.giftRepo = giftRepo;
         this.itemsRepo = itemsRepo;
         this.userRepo = userRepo;
+        this.emailService=emailService;
     }
 
     @Override
@@ -54,6 +56,10 @@ public class GiftServiceImpl implements GiftService {
             gift = giftRepo.save(gift);
             commonResponse.setStatus(true);
             commonResponse.setPayload(Collections.singletonList(gift.getId()));
+
+            User user = userRepo.findById(Long.valueOf(gift.getUserId())).get();
+            emailService.sendOrderConfirmationEmail(gift,user);
+
         } catch (Exception e) {
             commonResponse.setStatus(false);
             commonResponse.setErrorMessages(Collections.singletonList("An error occurred while saving the gift."));
@@ -133,9 +139,15 @@ public class GiftServiceImpl implements GiftService {
             existingGiftBox.setPaymentStatus(giftDto.getPaymentStatus());
 
 
-            giftRepo.save(existingGiftBox);
-            commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList("Payment SuccessFully"));
+            Gift gift = giftRepo.findById(Long.valueOf(giftDto.getId())).orElse(null);
+            if (gift != null) {
+                User user = userRepo.findById(Long.valueOf(gift.getUserId())).orElse(null);
+                if (user != null) {
+                    emailService.sendOrderConfirmationEmail(gift, user);
+                }
+            }
+
+
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in GiftService -> updateProduct()", e);
             commonResponse.setStatus(false);
@@ -205,7 +217,7 @@ public class GiftServiceImpl implements GiftService {
         gift.setSendingDate(giftDto.getSendingDate());
         gift.setZip(giftDto.getZip());
         gift.setTotalPrice(Double.valueOf(giftDto.getTotalPrice()));
-        gift.setPaymentStatus(PaymentStatus.NOT_PAID);
+        gift.setPaymentStatus(PaymentStatus.PAID);
         Set<Items> items = giftDto.getItemIds().stream()
                 .map(itemId -> itemsRepo.findById(itemId)
                         .orElseThrow(() -> new RuntimeException("Item not found")))

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Gift Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Welcome to Gift Shop!</h1>
+</div>
+<div class="content">
+    <p>Dear <span th:text="${userName}"></span>,</p>
+
+    <p>Thank you for registering with Gift Shop. Your account has been successfully created.</p>
+
+    <p><strong>Username:</strong> <span th:text="${userName}"></span></p>
+
+    <p>You can now log in and start shopping!</p>
+
+    <a class="button" href="http://localhost:4200/login">Login to Your Account</a>
+</div>
+<div class="footer">
+    <p>&copy; 2025 Gift Shop. All rights reserved.</p>
+    <p>This is an automated email, please do not reply.</p>
+</div>
+</body>
+</html>
