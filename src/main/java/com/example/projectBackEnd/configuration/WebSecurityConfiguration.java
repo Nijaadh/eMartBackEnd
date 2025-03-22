@@ -56,7 +56,12 @@ public class WebSecurityConfiguration  extends WebSecurityConfigurerAdapter {
                           "/api/gift/getAllByUser/{{userId}}",
                 "/api/gift/getAllNew","/api/gift/getAllAcc","/api/gift/getAllDeli","/api/gift/status",
                // "/api/admin/user/count",
-                        "/api/admin/**"
+                        "/api/admin/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**"
                 ).permitAll()
                 .antMatchers(HttpHeaders.ALLOW).permitAll()
                 .anyRequest().authenticated()
