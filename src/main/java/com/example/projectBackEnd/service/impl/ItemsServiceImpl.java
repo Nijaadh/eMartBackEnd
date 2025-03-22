@@ -4,7 +4,9 @@ import com.example.projectBackEnd.constant.CommonMsg;
 import com.example.projectBackEnd.constant.CommonStatus;
 import com.example.projectBackEnd.dto.ItemsDto;
 import com.example.projectBackEnd.entity.Items;
+import com.example.projectBackEnd.entity.SubCategory;
 import com.example.projectBackEnd.repo.ItemsRepo;
+import com.example.projectBackEnd.repo.SubCategoryRepo;
 import com.example.projectBackEnd.service.ItemService;
 import com.example.projectBackEnd.util.CommonResponse;
 import com.example.projectBackEnd.util.CommonValidation;
@@ -20,10 +22,12 @@ import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
 @Service
 public class ItemsServiceImpl implements ItemService {
     private final ItemsRepo itemsRepo;
+    private final SubCategoryRepo subCategoryRepo;
 
     @Autowired
-    public ItemsServiceImpl(ItemsRepo itemsRepo) {
+    public ItemsServiceImpl(ItemsRepo itemsRepo, SubCategoryRepo subCategoryRepo) {
         this.itemsRepo = itemsRepo;
+        this.subCategoryRepo = subCategoryRepo;
     }
 
     @Override
@@ -156,6 +160,11 @@ public class ItemsServiceImpl implements ItemService {
          items.setCommonStatus(itemsDto.getCommonStatus());
          items.setCategory(itemsDto.getCategory());
          items.setImage(itemsDto.getImage());
+        if (itemsDto.getSubCategoryId() != null) {
+            SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
+                    .orElse(null);
+            items.setSubCategory(subCategory);
+        }
         return items;
   }
   private ItemsDto castItemsEntityToDto(Items items){
@@ -167,6 +176,9 @@ public class ItemsServiceImpl implements ItemService {
         itemsDto.setImage(items.getImage());
         itemsDto.setUnitPrice(items.getUnitPrice().toString());
         itemsDto.setCommonStatus(items.getCommonStatus());
+      if (items.getSubCategory() != null) {
+          itemsDto.setSubCategoryId(items.getSubCategory().getId());
+      }
         return itemsDto;
   }
     private List<String> itemsValidation(ItemsDto itemsDto) {

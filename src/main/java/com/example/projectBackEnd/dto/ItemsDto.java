@@ -16,4 +16,5 @@ public class ItemsDto {
     private String Category;
     private String image;
     private CommonStatus commonStatus;
+    private Long subCategoryId;
 }
