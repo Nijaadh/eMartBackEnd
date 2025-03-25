@@ -43,7 +43,7 @@ public class ItemsController {
     }
 
     @GetMapping("/search")
-    public List<Items> searchByName(@RequestParam String name) {
+    public CommonResponse searchByName(@RequestParam String name) {
         return itemService.searchByName(name);
     }
 }

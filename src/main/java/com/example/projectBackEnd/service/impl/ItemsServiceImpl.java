@@ -148,8 +148,21 @@ public class ItemsServiceImpl implements ItemService {
     }
 
     @Override
-    public List<Items> searchByName(String name) {
-        return itemsRepo.findByNameContainingIgnoreCase(name);
+    public CommonResponse searchByName(String name) {
+        CommonResponse commonResponse = new CommonResponse();
+        try {
+            List<Items> items = itemsRepo.findByNameContainingIgnoreCase(name);
+            List<ItemsDto> itemsDtoList = items.stream()
+                    .map(this::castItemsEntityToDto)
+                    .collect(Collectors.toList());
+
+            commonResponse.setStatus(true);
+            commonResponse.setPayload(Collections.singletonList(itemsDtoList));
+        } catch (Exception e) {
+            commonResponse.setStatus(false);
+            commonResponse.setErrorMessages(Collections.singletonList("An error occurred while searching for items."));
+        }
+        return commonResponse;
     }
 
     private Items castItemsDtoToEntity(ItemsDto itemsDto){

@@ -17,5 +17,5 @@ public interface ItemService {
 
     CommonResponse getItemsByIds(List<Long> itemIds);
 
-    List<Items> searchByName(String name);
+    CommonResponse searchByName(String name);
 }
