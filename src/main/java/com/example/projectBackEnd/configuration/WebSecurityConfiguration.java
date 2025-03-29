@@ -59,6 +59,8 @@ public class WebSecurityConfiguration  extends WebSecurityConfigurerAdapter {
                "/api/categories/getAll",
                "/api/subcategories/add",
                "/api/subcategories/getAll",
+               "/api/subcategories/{{Id}}",
+               "/api/subcategories/by-category/{categoryId}",
                // "/api/admin/user/count",
                         "/api/admin/**",
                         "/swagger-ui.html",
