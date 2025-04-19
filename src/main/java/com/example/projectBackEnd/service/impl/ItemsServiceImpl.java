@@ -173,6 +173,10 @@ public class ItemsServiceImpl implements ItemService {
          items.setCommonStatus(itemsDto.getCommonStatus());
          items.setCategory(itemsDto.getCategory());
          items.setImage(itemsDto.getImage());
+        items.setItemCount(itemsDto.getItemCount());
+        items.setSalesCount(itemsDto.getSalesCount());
+        items.setDiscount(itemsDto.getDiscount() != null ? Double.valueOf(itemsDto.getDiscount()) : null);
+        items.setReOrderLevel(itemsDto.getReOrderLevel());
         if (itemsDto.getSubCategoryId() != null) {
             SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
                     .orElse(null);
@@ -189,6 +193,11 @@ public class ItemsServiceImpl implements ItemService {
         itemsDto.setImage(items.getImage());
         itemsDto.setUnitPrice(items.getUnitPrice().toString());
         itemsDto.setCommonStatus(items.getCommonStatus());
+
+      itemsDto.setItemCount(items.getItemCount());
+      itemsDto.setSalesCount(items.getSalesCount());
+      itemsDto.setDiscount(items.getDiscount() != null ? items.getDiscount().toString() : null);
+      itemsDto.setReOrderLevel(items.getReOrderLevel());
       if (items.getSubCategory() != null) {
           itemsDto.setSubCategoryId(items.getSubCategory().getId());
       }
