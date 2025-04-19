@@ -5,20 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemsDto {
-    private String id;
+public class CategoryWithSubCategoryDto {
+    private Long id;
     private String name;
-    private String unitPrice;
-    private String Description;
-    private String Category;
+    private String description;
     private String image;
     private CommonStatus commonStatus;
-    private Long subCategoryId;
-    private Integer itemCount;
-    private Integer salesCount;
-    private String discount;
-    private Integer reOrderLevel;
+    private List<SubCategoryDto> subCategories;
 }

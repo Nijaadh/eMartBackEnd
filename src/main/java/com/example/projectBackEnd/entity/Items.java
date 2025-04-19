@@ -29,11 +29,24 @@ public class Items {
     @Column
     private String Category;
 
-    @Column( columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String image;
 
     @Column
     private CommonStatus commonStatus;
+
+    // New columns
+    @Column
+    private Integer itemCount;
+
+    @Column
+    private Integer salesCount;
+
+    @Column
+    private Double discount;
+
+    @Column
+    private Integer reOrderLevel;
 
     @ManyToMany(mappedBy = "items")
     private Set<Gift> gifts;

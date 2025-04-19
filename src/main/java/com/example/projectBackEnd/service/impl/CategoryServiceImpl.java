@@ -3,6 +3,7 @@ package com.example.projectBackEnd.service.impl;
 import com.example.projectBackEnd.constant.CommonMsg;
 import com.example.projectBackEnd.constant.CommonStatus;
 import com.example.projectBackEnd.dto.CategoryDto;
+import com.example.projectBackEnd.dto.CategoryWithSubCategoryDto;
 import com.example.projectBackEnd.dto.SubCategoryDto;
 import com.example.projectBackEnd.entity.Category;
 import com.example.projectBackEnd.entity.SubCategory;
@@ -211,6 +212,49 @@ public class CategoryServiceImpl implements CategoryService {
         category.setCommonStatus(categoryDto.getCommonStatus() != null ? categoryDto.getCommonStatus() : CommonStatus.ACTIVE);
         return category;
     }
+
+    @Override
+    public CommonResponse getAllCategoriesWithSubcategories() {
+        CommonResponse commonResponse = new CommonResponse();
+        try {
+            List<Category> categories = categoryRepo.findAll();
+            List<CategoryWithSubCategoryDto> categoryDtos = new ArrayList<>();
+
+            for (Category category : categories) {
+                CategoryWithSubCategoryDto categoryDto = new CategoryWithSubCategoryDto();
+                categoryDto.setId(category.getId());
+                categoryDto.setName(category.getName());
+                categoryDto.setDescription(category.getDescription());
+                categoryDto.setCommonStatus(category.getCommonStatus());
+
+                // Get subcategories for this category
+                List<SubCategory> subcategories = subCategoryRepo.findByCategoryId(category.getId());
+                List<SubCategoryDto> subCategoryDtos = subcategories.stream()
+                        .map(subCategory -> {
+                            SubCategoryDto subCategoryDto = new SubCategoryDto();
+                            subCategoryDto.setId(subCategory.getId());
+                            subCategoryDto.setName(subCategory.getName());
+                            subCategoryDto.setDescription(subCategory.getDescription());
+                            subCategoryDto.setCommonStatus(subCategory.getCommonStatus());
+                            subCategoryDto.setCategoryId(category.getId());
+                            return subCategoryDto;
+                        })
+                        .collect(Collectors.toList());
+
+                categoryDto.setSubCategories(subCategoryDtos);
+                categoryDtos.add(categoryDto);
+            }
+
+            commonResponse.setStatus(true);
+            commonResponse.setPayload(Collections.singletonList(categoryDtos));
+            return commonResponse;
+        } catch (Exception e) {
+            commonResponse.setStatus(false);
+            commonResponse.setErrorMessages(Collections.singletonList("An error occurred while fetching categories with subcategories."+ e.getMessage()));
+            return commonResponse;
+        }
+    }
+
 
     private CategoryDto castCategoryEntityToDto(Category category) {
         CategoryDto categoryDto = new CategoryDto();

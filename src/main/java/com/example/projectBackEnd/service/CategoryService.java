@@ -15,4 +15,6 @@ public interface CategoryService {
     List<Category> searchByName(String name);
     CommonResponse getCategoryById(Long id);
     CommonResponse getSubcategoriesByCategoryId(Long id);
+    CommonResponse getAllCategoriesWithSubcategories();
+
 }

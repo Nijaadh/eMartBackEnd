@@ -59,5 +59,9 @@ public class CategoryController {
     public CommonResponse getSubcategoriesByCategoryId(@PathVariable Long id) {
         return categoryService.getSubcategoriesByCategoryId(id);
     }
-    //just a simple comment
+
+    @GetMapping("/with-subcategories")
+    public CommonResponse getAllCategoriesWithSubcategories() {
+        return categoryService.getAllCategoriesWithSubcategories();
+    }
 }
