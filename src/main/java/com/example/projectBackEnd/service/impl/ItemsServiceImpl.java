@@ -3,8 +3,11 @@ package com.example.projectBackEnd.service.impl;
 import com.example.projectBackEnd.constant.CommonMsg;
 import com.example.projectBackEnd.constant.CommonStatus;
 import com.example.projectBackEnd.dto.ItemsDto;
+import com.example.projectBackEnd.dto.ItemsDtoWithCatagoryNames;
+import com.example.projectBackEnd.entity.Category;
 import com.example.projectBackEnd.entity.Items;
 import com.example.projectBackEnd.entity.SubCategory;
+import com.example.projectBackEnd.repo.CategoryRepo;
 import com.example.projectBackEnd.repo.ItemsRepo;
 import com.example.projectBackEnd.repo.SubCategoryRepo;
 import com.example.projectBackEnd.service.ItemService;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
@@ -23,11 +27,13 @@ import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
 public class ItemsServiceImpl implements ItemService {
     private final ItemsRepo itemsRepo;
     private final SubCategoryRepo subCategoryRepo;
+    private final CategoryRepo categoryRepo;
 
     @Autowired
-    public ItemsServiceImpl(ItemsRepo itemsRepo, SubCategoryRepo subCategoryRepo) {
+    public ItemsServiceImpl(ItemsRepo itemsRepo, SubCategoryRepo subCategoryRepo, CategoryRepo categoryRepo) {
         this.itemsRepo = itemsRepo;
         this.subCategoryRepo = subCategoryRepo;
+        this.categoryRepo = categoryRepo;
     }
 
     @Override
@@ -42,8 +48,12 @@ public class ItemsServiceImpl implements ItemService {
 
             Items items = castItemsDtoToEntity(itemsDto);
             items = itemsRepo.save(items);
+
+            // Convert to the new DTO with category and subcategory names
+            ItemsDtoWithCatagoryNames itemWithNames = castItemsEntityToDtoWithNames(items);
+
             commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList(items));
+            commonResponse.setPayload(Collections.singletonList(itemWithNames));
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in ProductService -> saveProduct()", e);
             commonResponse.setStatus(false);
@@ -57,8 +67,8 @@ public class ItemsServiceImpl implements ItemService {
         CommonResponse commonResponse = new CommonResponse();
         try {
             List<Object> itemDtoList = itemsRepo.findAll().stream()
-                    .filter(Items -> Items.getCommonStatus() == CommonStatus.ACTIVE)
-                    .map(this::castItemsEntityToDto)
+                    .filter(items -> items.getCommonStatus() == CommonStatus.ACTIVE)
+                    .map(this::castItemsEntityToDtoWithNames)  // Use the new mapping method
                     .collect(Collectors.toList());
             commonResponse.setStatus(true);
             commonResponse.setPayload(itemDtoList);  // Directly set the list
@@ -87,10 +97,24 @@ public class ItemsServiceImpl implements ItemService {
             existingItem.setDescription(itemsDto.getDescription());
             existingItem.setUnitPrice(Double.valueOf(itemsDto.getUnitPrice()));
             existingItem.setCommonStatus(itemsDto.getCommonStatus());
+            existingItem.setItemCount(itemsDto.getItemCount());
+            existingItem.setSalesCount(itemsDto.getSalesCount());
+            existingItem.setDiscount(itemsDto.getDiscount() != null ? Double.valueOf(itemsDto.getDiscount()) : null);
+            existingItem.setReOrderLevel(itemsDto.getReOrderLevel());
 
-            itemsRepo.save(existingItem);
+            if (itemsDto.getSubCategoryId() != null) {
+                SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
+                        .orElse(null);
+                existingItem.setSubCategory(subCategory);
+            }
+
+            Items updatedItem = itemsRepo.save(existingItem);
+
+            // Convert to the new DTO with category and subcategory names
+            ItemsDtoWithCatagoryNames itemWithNames = castItemsEntityToDtoWithNames(updatedItem);
+
             commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList(existingItem));
+            commonResponse.setPayload(Collections.singletonList(itemWithNames));
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in ProductService -> updateProduct()", e);
             commonResponse.setStatus(false);
@@ -113,9 +137,13 @@ public class ItemsServiceImpl implements ItemService {
                     .orElseThrow(() -> new RuntimeException("Item not found"));
 
             existingItem.setCommonStatus(CommonStatus.DELETED);
-            itemsRepo.save(existingItem);
+            Items deletedItem = itemsRepo.save(existingItem);
+
+            // Convert to the new DTO with category and subcategory names
+            ItemsDtoWithCatagoryNames itemWithNames = castItemsEntityToDtoWithNames(deletedItem);
+
             commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList(existingItem));
+            commonResponse.setPayload(Collections.singletonList(itemWithNames));
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in ItemService -> deleteProduct()", e);
             commonResponse.setStatus(false);
@@ -131,9 +159,9 @@ public class ItemsServiceImpl implements ItemService {
             // Fetch items by the given list of item IDs
             List<Items> itemsList = itemsRepo.findAllById(itemIds);
 
-            // Convert entities to DTOs
-            List<ItemsDto> itemsDtoList = itemsList.stream()
-                    .map(this::castItemsEntityToDto)
+            // Convert entities to DTOs with category and subcategory names
+            List<ItemsDtoWithCatagoryNames> itemsDtoList = itemsList.stream()
+                    .map(this::castItemsEntityToDtoWithNames)
                     .collect(Collectors.toList());
 
             // Set response status and payload
@@ -142,7 +170,7 @@ public class ItemsServiceImpl implements ItemService {
         } catch (Exception e) {
             commonResponse.setStatus(false);
             commonResponse.setErrorMessages(Collections.singletonList("An error occurred while fetching items."));
-          //  e.printStackTrace();
+            //e.printStackTrace();
         }
         return commonResponse;
     }
@@ -152,8 +180,8 @@ public class ItemsServiceImpl implements ItemService {
         CommonResponse commonResponse = new CommonResponse();
         try {
             List<Items> items = itemsRepo.findByNameContainingIgnoreCase(name);
-            List<ItemsDto> itemsDtoList = items.stream()
-                    .map(this::castItemsEntityToDto)
+            List<ItemsDtoWithCatagoryNames> itemsDtoList = items.stream()
+                    .map(this::castItemsEntityToDtoWithNames)
                     .collect(Collectors.toList());
 
             commonResponse.setStatus(true);
@@ -166,26 +194,28 @@ public class ItemsServiceImpl implements ItemService {
     }
 
     private Items castItemsDtoToEntity(ItemsDto itemsDto){
-         Items items=new Items();
-         items.setName(itemsDto.getName());
-         items.setDescription(itemsDto.getDescription());
-         items.setUnitPrice(Double.valueOf(itemsDto.getUnitPrice()));
-         items.setCommonStatus(itemsDto.getCommonStatus());
-         items.setCategory(itemsDto.getCategory());
-         items.setImage(itemsDto.getImage());
+        Items items = new Items();
+        items.setName(itemsDto.getName());
+        items.setDescription(itemsDto.getDescription());
+        items.setUnitPrice(Double.valueOf(itemsDto.getUnitPrice()));
+        items.setCommonStatus(itemsDto.getCommonStatus());
+        items.setCategory(itemsDto.getCategory());
+        items.setImage(itemsDto.getImage());
         items.setItemCount(itemsDto.getItemCount());
         items.setSalesCount(itemsDto.getSalesCount());
         items.setDiscount(itemsDto.getDiscount() != null ? Double.valueOf(itemsDto.getDiscount()) : null);
         items.setReOrderLevel(itemsDto.getReOrderLevel());
+
         if (itemsDto.getSubCategoryId() != null) {
             SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
                     .orElse(null);
             items.setSubCategory(subCategory);
         }
         return items;
-  }
-  private ItemsDto castItemsEntityToDto(Items items){
-        ItemsDto itemsDto=new ItemsDto();
+    }
+
+    private ItemsDto castItemsEntityToDto(Items items){
+        ItemsDto itemsDto = new ItemsDto();
         itemsDto.setId(String.valueOf(items.getId()));
         itemsDto.setName(items.getName());
         itemsDto.setDescription(items.getDescription());
@@ -193,16 +223,67 @@ public class ItemsServiceImpl implements ItemService {
         itemsDto.setImage(items.getImage());
         itemsDto.setUnitPrice(items.getUnitPrice().toString());
         itemsDto.setCommonStatus(items.getCommonStatus());
+        itemsDto.setItemCount(items.getItemCount());
+        itemsDto.setSalesCount(items.getSalesCount());
+        itemsDto.setDiscount(items.getDiscount() != null ? items.getDiscount().toString() : null);
+        itemsDto.setReOrderLevel(items.getReOrderLevel());
 
-      itemsDto.setItemCount(items.getItemCount());
-      itemsDto.setSalesCount(items.getSalesCount());
-      itemsDto.setDiscount(items.getDiscount() != null ? items.getDiscount().toString() : null);
-      itemsDto.setReOrderLevel(items.getReOrderLevel());
-      if (items.getSubCategory() != null) {
-          itemsDto.setSubCategoryId(items.getSubCategory().getId());
-      }
+        if (items.getSubCategory() != null) {
+            itemsDto.setSubCategoryId(items.getSubCategory().getId());
+        }
         return itemsDto;
-  }
+    }
+
+    // New method to map entity to DTO with category and subcategory names
+    private ItemsDtoWithCatagoryNames castItemsEntityToDtoWithNames(Items items) {
+        ItemsDtoWithCatagoryNames dto = new ItemsDtoWithCatagoryNames();
+        dto.setId(String.valueOf(items.getId()));
+        dto.setName(items.getName());
+        dto.setDescription(items.getDescription());
+        dto.setCategory(items.getCategory());
+        dto.setImage(items.getImage());
+        dto.setUnitPrice(items.getUnitPrice().toString());
+        dto.setCommonStatus(items.getCommonStatus());
+        dto.setItemCount(items.getItemCount());
+        dto.setSalesCount(items.getSalesCount());
+        dto.setDiscount(items.getDiscount() != null ? items.getDiscount().toString() : null);
+        dto.setReOrderLevel(items.getReOrderLevel());
+
+        // Get subcategory and its name
+        if (items.getSubCategory() != null) {
+            SubCategory subCategory = items.getSubCategory();
+            dto.setSubCategoryId(subCategory.getId());
+            dto.setSubCategoryName(subCategory.getName());
+
+            // Get category name from subcategory's category
+            if (subCategory.getCategory() != null) {
+                dto.setCatagoryName(subCategory.getCategory().getName());
+            } else {
+                // If category is not available in subcategory, try to find it by ID from the category field
+                try {
+                    Long categoryId = Long.valueOf(items.getCategory());
+                    Optional<Category> categoryOpt = categoryRepo.findById(categoryId);
+                    categoryOpt.ifPresent(category -> dto.setCatagoryName(category.getName()));
+                } catch (NumberFormatException e) {
+                    // If category is not a number, use it as is
+                    dto.setCatagoryName(items.getCategory());
+                }
+            }
+        } else {
+            // If subcategory is not available, try to find category by ID
+            try {
+                Long categoryId = Long.valueOf(items.getCategory());
+                Optional<Category> categoryOpt = categoryRepo.findById(categoryId);
+                categoryOpt.ifPresent(category -> dto.setCatagoryName(category.getName()));
+            } catch (NumberFormatException e) {
+                // If category is not a number, use it as is
+                dto.setCatagoryName(items.getCategory());
+            }
+        }
+
+        return dto;
+    }
+
     private List<String> itemsValidation(ItemsDto itemsDto) {
         List<String> validationList = new ArrayList<>();
         if (CommonValidation.stringNullValidation(itemsDto.getName())) {
