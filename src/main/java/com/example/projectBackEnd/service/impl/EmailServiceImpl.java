@@ -1,6 +1,7 @@
 package com.example.projectBackEnd.service.impl;
 
 import com.example.projectBackEnd.entity.Gift;
+import com.example.projectBackEnd.entity.Order;
 import com.example.projectBackEnd.entity.User;
 import com.example.projectBackEnd.service.EmailService;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import org.thymeleaf.context.Context;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.util.Locale;
+
+import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
 
 @Service
 public class EmailServiceImpl implements EmailService {
@@ -119,6 +122,71 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    // Add these methods to your existing EmailServiceImpl class
+
+    public void sendOrderConfirmationEmail(Order order, User user) {
+        try {
+            String subject = "Order Confirmation - Order #" + order.getId();
+
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.append("Dear ").append(user.getUserName()).append(",\n\n");
+            messageBuilder.append("Thank you for your order. Your order has been received and is being processed.\n\n");
+            messageBuilder.append("Order Details:\n");
+            messageBuilder.append("Order ID: ").append(order.getId()).append("\n");
+            messageBuilder.append("Order Date: ").append(order.getCreatedAt()).append("\n");
+            messageBuilder.append("Total Amount: $").append(order.getOrderTotal()).append("\n\n");
+            messageBuilder.append("Shipping Address:\n");
+            messageBuilder.append(order.getReceiverAddress()).append("\n");
+            messageBuilder.append("Zip: ").append(order.getZip()).append("\n\n");
+            messageBuilder.append("We will notify you when your order has been shipped.\n\n");
+            messageBuilder.append("Thank you for shopping with us!\n\n");
+            messageBuilder.append("Best regards,\n");
+            messageBuilder.append("Your Online Store Team");
+
+            sendHtmlEmail(user.getEmail(), subject, messageBuilder.toString());
+        } catch (Exception e) {
+            LOGGER.error("Error sending order confirmation email", e);
+        }
+    }
+
+    public void sendOrderStatusUpdateEmail(Order order, User user) {
+        try {
+            String subject = "Order Status Update - Order #" + order.getId();
+
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.append("Dear ").append(user.getUserName()).append(",\n\n");
+            messageBuilder.append("We're writing to inform you that the status of your order has been updated.\n\n");
+            messageBuilder.append("Order Details:\n");
+            messageBuilder.append("Order ID: ").append(order.getId()).append("\n");
+            messageBuilder.append("Order Date: ").append(order.getCreatedAt()).append("\n");
+            messageBuilder.append("Current Status: ").append(order.getOrderStatus()).append("\n");
+            messageBuilder.append("Payment Status: ").append(order.getPaymentStatus()).append("\n\n");
+
+            // Add specific messages based on order status
+            switch (order.getOrderStatus()) {
+                case PROCESSING:
+                    messageBuilder.append("Your order is now being processed. We'll notify you once it's shipped.\n\n");
+                    break;
+                case SHIPPED:
+                    messageBuilder.append("Great news! Your order has been shipped and is on its way to you.\n\n");
+                    break;
+                case DELIVERED:
+                    messageBuilder.append("Your order has been delivered. We hope you enjoy your purchase!\n\n");
+                    break;
+                default:
+                    messageBuilder.append("Your order status has been updated. Please check your account for more details.\n\n");
+            }
+
+            messageBuilder.append("Thank you for shopping with us!\n\n");
+            messageBuilder.append("Best regards,\n");
+            messageBuilder.append("Your Online Store Team");
+
+            sendHtmlEmail(user.getEmail(), subject, messageBuilder.toString());
+        } catch (Exception e) {
+            LOGGER.error("Error sending order status update email", e);
+        }
+    }
+
     /**
      * Helper method to send HTML emails
      */
@@ -133,4 +201,6 @@ public class EmailServiceImpl implements EmailService {
 
         emailSender.send(message);
     }
+
+
 }
