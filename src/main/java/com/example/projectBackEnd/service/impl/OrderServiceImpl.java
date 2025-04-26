@@ -48,6 +48,7 @@ public class OrderServiceImpl implements OrderService {
         this.emailService = emailService;
     }
 
+
     @Override
     public CommonResponse createOrder(OrderDto orderDto) {
         CommonResponse commonResponse = new CommonResponse();
@@ -58,11 +59,18 @@ public class OrderServiceImpl implements OrderService {
                 return commonResponse;
             }
 
+            // Check if there's enough inventory for all items
+            if (!checkInventoryAvailability(orderDto.getItemQuantities())) {
+                commonResponse.setStatus(false);
+                commonResponse.setErrorMessages(Collections.singletonList("Some items are out of stock or don't have enough inventory"));
+                return commonResponse;
+            }
+
             Order order = castOrderDtoToEntity(orderDto);
             order = orderRepo.save(order);
 
-            // Save order item quantities
-            saveOrderItemQuantities(order, orderDto.getItemQuantities());
+            // Save order item quantities and update inventory
+            saveOrderItemQuantitiesAndUpdateInventory(order, orderDto.getItemQuantities());
 
             commonResponse.setStatus(true);
             commonResponse.setPayload(Collections.singletonList(order.getId()));
@@ -73,7 +81,6 @@ public class OrderServiceImpl implements OrderService {
                 // You'll need to adapt your email service to handle orders
                 // emailService.sendOrderConfirmationEmail(order, user);
             }
-
         } catch (Exception e) {
             commonResponse.setStatus(false);
             commonResponse.setErrorMessages(Collections.singletonList("An error occurred while saving the order: " + e.getMessage()));
@@ -81,6 +88,63 @@ public class OrderServiceImpl implements OrderService {
         }
         return commonResponse;
     }
+
+    /**
+     * Checks if there's enough inventory for all items in the order
+     */
+    private boolean checkInventoryAvailability(Map<Long, Integer> itemQuantities) {
+        if (itemQuantities == null) {
+            return false;
+        }
+
+        for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
+            Long itemId = entry.getKey();
+            Integer quantityOrdered = entry.getValue();
+
+            Items item = itemsRepo.findById(itemId).orElse(null);
+            if (item == null || item.getItemCount() < quantityOrdered) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Saves order item quantities and updates inventory counts
+     */
+    private void saveOrderItemQuantitiesAndUpdateInventory(Order order, Map<Long, Integer> itemQuantities) {
+        if (itemQuantities != null) {
+            for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
+                Long itemId = entry.getKey();
+                Integer quantity = entry.getValue();
+
+                Items item = itemsRepo.findById(itemId).orElse(null);
+                if (item != null) {
+                    // Create order item quantity record
+                    OrderItemQuantity orderItemQty = new OrderItemQuantity();
+                    orderItemQty.setOrder(order);
+                    orderItemQty.setItem(item);
+                    orderItemQty.setQuantity(quantity);
+                    orderItemQuantityRepo.save(orderItemQty);
+
+                    // Update inventory: reduce item count and increase sales count
+                    item.setItemCount(item.getItemCount() - quantity);
+                    item.setSalesCount(item.getSalesCount() + quantity);
+
+                    // Check if item count is below reorder level
+                    if (item.getItemCount() <= item.getReOrderLevel()) {
+                        // You could implement a notification system here
+                        LOGGER.info("Item " + item.getName() + " (ID: " + item.getId() + ") is below reorder level. Current count: " + item.getItemCount());
+                    }
+
+                    // Save the updated item
+                    itemsRepo.save(item);
+                }
+            }
+        }
+    }
+
 
     private void saveOrderItemQuantities(Order order, Map<Long, Integer> itemQuantities) {
         if (itemQuantities != null) {
