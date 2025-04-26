@@ -15,6 +15,8 @@ import com.example.projectBackEnd.util.CommonResponse;
 import com.example.projectBackEnd.util.CommonValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +49,7 @@ public class ItemsServiceImpl implements ItemService {
             }
 
             Items items = castItemsDtoToEntity(itemsDto);
+
             items = itemsRepo.save(items);
 
             // Convert to the new DTO with category and subcategory names
@@ -80,6 +83,7 @@ public class ItemsServiceImpl implements ItemService {
         return commonResponse;
     }
 
+    
     @Override
     public CommonResponse updateItems(ItemsDto itemsDto) {
         CommonResponse commonResponse = new CommonResponse();
@@ -89,10 +93,8 @@ public class ItemsServiceImpl implements ItemService {
                 commonResponse.setErrorMessages(Collections.singletonList("Item ID is required for update."));
                 return commonResponse;
             }
-
             Items existingItem = itemsRepo.findById(Long.valueOf(itemsDto.getId()))
                     .orElseThrow(() -> new RuntimeException("Item not found"));
-
             existingItem.setName(itemsDto.getName());
             existingItem.setDescription(itemsDto.getDescription());
             existingItem.setUnitPrice(Double.valueOf(itemsDto.getUnitPrice()));
@@ -102,17 +104,17 @@ public class ItemsServiceImpl implements ItemService {
             existingItem.setDiscount(itemsDto.getDiscount() != null ? Double.valueOf(itemsDto.getDiscount()) : null);
             existingItem.setReOrderLevel(itemsDto.getReOrderLevel());
 
+            // Note: We don't update createdAt during updates
+            // The createdAt field should remain as it was when the item was first created
+
             if (itemsDto.getSubCategoryId() != null) {
                 SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
                         .orElse(null);
                 existingItem.setSubCategory(subCategory);
             }
-
             Items updatedItem = itemsRepo.save(existingItem);
-
             // Convert to the new DTO with category and subcategory names
             ItemsDtoWithCatagoryNames itemWithNames = castItemsEntityToDtoWithNames(updatedItem);
-
             commonResponse.setStatus(true);
             commonResponse.setPayload(Collections.singletonList(itemWithNames));
         } catch (Exception e) {
@@ -122,6 +124,7 @@ public class ItemsServiceImpl implements ItemService {
         }
         return commonResponse;
     }
+
 
     @Override
     public CommonResponse deleteItem(ItemsDto itemsDto) {
@@ -206,6 +209,9 @@ public class ItemsServiceImpl implements ItemService {
         items.setDiscount(itemsDto.getDiscount() != null ? Double.valueOf(itemsDto.getDiscount()) : null);
         items.setReOrderLevel(itemsDto.getReOrderLevel());
 
+        // Set the createdAt field to the current date and time
+        items.setCreatedAt(LocalDateTime.now());
+
         if (itemsDto.getSubCategoryId() != null) {
             SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
                     .orElse(null);
@@ -213,6 +219,7 @@ public class ItemsServiceImpl implements ItemService {
         }
         return items;
     }
+
 
     private ItemsDto castItemsEntityToDto(Items items){
         ItemsDto itemsDto = new ItemsDto();
@@ -227,6 +234,9 @@ public class ItemsServiceImpl implements ItemService {
         itemsDto.setSalesCount(items.getSalesCount());
         itemsDto.setDiscount(items.getDiscount() != null ? items.getDiscount().toString() : null);
         itemsDto.setReOrderLevel(items.getReOrderLevel());
+
+        // Set the createdAt field
+        itemsDto.setCreatedAt(items.getCreatedAt());
 
         if (items.getSubCategory() != null) {
             itemsDto.setSubCategoryId(items.getSubCategory().getId());
@@ -249,12 +259,14 @@ public class ItemsServiceImpl implements ItemService {
         dto.setDiscount(items.getDiscount() != null ? items.getDiscount().toString() : null);
         dto.setReOrderLevel(items.getReOrderLevel());
 
+        // Set the createdAt field
+        dto.setCreatedAt(items.getCreatedAt());
+
         // Get subcategory and its name
         if (items.getSubCategory() != null) {
             SubCategory subCategory = items.getSubCategory();
             dto.setSubCategoryId(subCategory.getId());
             dto.setSubCategoryName(subCategory.getName());
-
             // Get category name from subcategory's category
             if (subCategory.getCategory() != null) {
                 dto.setCatagoryName(subCategory.getCategory().getName());
@@ -280,7 +292,6 @@ public class ItemsServiceImpl implements ItemService {
                 dto.setCatagoryName(items.getCategory());
             }
         }
-
         return dto;
     }
 

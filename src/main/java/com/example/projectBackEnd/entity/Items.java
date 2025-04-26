@@ -3,8 +3,8 @@ package com.example.projectBackEnd.entity;
 import com.example.projectBackEnd.constant.CommonStatus;
 import lombok.Getter;
 import lombok.Setter;
-
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,6 +47,10 @@ public class Items {
 
     @Column
     private Integer reOrderLevel;
+
+    // Added createdAt field
+    @Column
+    private LocalDateTime createdAt;
 
     @ManyToMany(mappedBy = "items")
     private Set<Gift> gifts;
