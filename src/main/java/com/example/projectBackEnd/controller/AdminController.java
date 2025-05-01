@@ -1,6 +1,8 @@
 package com.example.projectBackEnd.controller;
 
 import com.example.projectBackEnd.service.AdminService;
+import com.example.projectBackEnd.service.DashboardService;
+import com.example.projectBackEnd.util.CommonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,10 +17,12 @@ import java.util.List;
 @CrossOrigin
 public class AdminController {
     private final AdminService adminService;
+    private final DashboardService dashboardService;
 
     @Autowired
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, DashboardService dashboardService) {
         this.adminService = adminService;
+        this.dashboardService = dashboardService;
     }
     @GetMapping("/user/count")
     public long getUserCount() {
@@ -50,5 +54,10 @@ public class AdminController {
     @GetMapping("/last-year-monthly-total-price")
     public Double[] getLastYearMonthlyTotalPrice() {
         return adminService.getLastYearMonthlyTotalPrice();
+    }
+
+    @GetMapping("/dashboard-data")
+    public CommonResponse dashboardData() {
+        return dashboardService.getAllData();
     }
 }
