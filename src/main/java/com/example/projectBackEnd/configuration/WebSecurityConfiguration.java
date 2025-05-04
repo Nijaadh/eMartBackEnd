@@ -62,7 +62,7 @@ public class WebSecurityConfiguration  extends WebSecurityConfigurerAdapter {
                "/api/subcategories/getAll",
                "/api/subcategories/{{Id}}",
                "/api/subcategories/by-category/{categoryId}",
-
+"/api/categories/{id}",
                         "/api/subcategories/delete",
                         "/api/subcategories/delete",
                         "/api/subcategories/by-ids",
