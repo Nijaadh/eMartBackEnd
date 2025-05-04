@@ -4,7 +4,9 @@ import com.example.projectBackEnd.constant.CommonStatus;
 import lombok.Getter;
 import lombok.Setter;
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,7 +52,7 @@ public class Items {
 
     // Added createdAt field
     @Column
-    private LocalDateTime createdAt;
+    private Timestamp createdAt;
 
     @ManyToMany(mappedBy = "items")
     private Set<Gift> gifts;

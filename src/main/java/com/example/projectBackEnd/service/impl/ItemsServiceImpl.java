@@ -17,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
@@ -49,6 +46,7 @@ public class ItemsServiceImpl implements ItemService {
             }
 
             Items items = castItemsDtoToEntity(itemsDto);
+            items.setCommonStatus(CommonStatus.ACTIVE);
 
             items = itemsRepo.save(items);
 
@@ -210,7 +208,7 @@ public class ItemsServiceImpl implements ItemService {
         items.setReOrderLevel(itemsDto.getReOrderLevel());
 
         // Set the createdAt field to the current date and time
-        items.setCreatedAt(LocalDateTime.now());
+        items.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
 
         if (itemsDto.getSubCategoryId() != null) {
             SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
