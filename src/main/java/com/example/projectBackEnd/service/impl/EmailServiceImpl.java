@@ -170,7 +170,7 @@ public class EmailServiceImpl implements EmailService {
                 case SHIPPED:
                     messageBuilder.append("Great news! Your order has been shipped and is on its way to you.\n\n");
                     break;
-                case DELIVERED:
+                case DELEVERD:
                     messageBuilder.append("Your order has been delivered. We hope you enjoy your purchase!\n\n");
                     break;
                 default:

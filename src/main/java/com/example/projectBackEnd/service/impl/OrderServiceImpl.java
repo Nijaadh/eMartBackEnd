@@ -198,7 +198,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public CommonResponse getAllOrdersDelivered() {
-        return getOrdersByStatus(OrderStatus.DELIVERED);
+        return getOrdersByStatus(OrderStatus.DELEVERD);
     }
 
     private CommonResponse getOrdersByStatus(OrderStatus status) {
