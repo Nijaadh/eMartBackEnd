@@ -47,7 +47,7 @@ public class ItemsServiceImpl implements ItemService {
 
             Items items = castItemsDtoToEntity(itemsDto);
             items.setCommonStatus(CommonStatus.ACTIVE);
-
+            items.setSalesCount(0);
             items = itemsRepo.save(items);
 
             // Convert to the new DTO with category and subcategory names
