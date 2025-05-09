@@ -1,13 +1,12 @@
 package com.example.projectBackEnd.entity;
 
 import com.example.projectBackEnd.constant.CommonStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -55,9 +54,11 @@ public class Items {
     private Timestamp createdAt;
 
     @ManyToMany(mappedBy = "items")
+    @JsonIgnoreProperties("items")
     private Set<Gift> gifts;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sub_category_id")
+    @JsonIgnoreProperties({"items", "category"})
     private SubCategory subCategory;
 }

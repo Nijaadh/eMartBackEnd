@@ -1,5 +1,6 @@
 package com.example.projectBackEnd.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,10 +17,12 @@ public class OrderItemQuantity {
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonIgnoreProperties("orderItems")
     private Order order;
 
     @ManyToOne
     @JoinColumn(name = "item_id")
+    @JsonIgnoreProperties({"gifts", "subCategory"})
     private Items item;
 
     @Column

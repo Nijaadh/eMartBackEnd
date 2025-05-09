@@ -3,11 +3,11 @@ package com.example.projectBackEnd.entity;
 import com.example.projectBackEnd.constant.CommonStatus;
 import com.example.projectBackEnd.constant.OrderStatus;
 import com.example.projectBackEnd.constant.PaymentStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 import java.util.Set;
 
 @Getter
@@ -44,5 +44,6 @@ public class Order {
     private String userId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("order")
     private Set<OrderItemQuantity> orderItems;
 }

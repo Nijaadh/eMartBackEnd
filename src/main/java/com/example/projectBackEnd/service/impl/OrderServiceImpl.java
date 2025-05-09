@@ -1,10 +1,9 @@
 package com.example.projectBackEnd.service.impl;
 
-import com.example.projectBackEnd.constant.CommonMsg;
 import com.example.projectBackEnd.constant.CommonStatus;
 import com.example.projectBackEnd.constant.OrderStatus;
 import com.example.projectBackEnd.constant.PaymentStatus;
-import com.example.projectBackEnd.dto.OrderDto;
+import com.example.projectBackEnd.dto.*;
 import com.example.projectBackEnd.entity.Items;
 import com.example.projectBackEnd.entity.Order;
 import com.example.projectBackEnd.entity.OrderItemQuantity;
@@ -30,7 +29,6 @@ import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
 
 @Service
 public class OrderServiceImpl implements OrderService {
-
     private final OrderRepo orderRepo;
     private final ItemsRepo itemsRepo;
     private final OrderItemQuantityRepo orderItemQuantityRepo;
@@ -38,16 +36,13 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepo userRepo;
 
     @Autowired
-    public OrderServiceImpl(OrderRepo orderRepo, ItemsRepo itemsRepo,
-                            OrderItemQuantityRepo orderItemQuantityRepo,
-                            UserRepo userRepo, EmailService emailService) {
+    public OrderServiceImpl(OrderRepo orderRepo, ItemsRepo itemsRepo, OrderItemQuantityRepo orderItemQuantityRepo, UserRepo userRepo, EmailService emailService) {
         this.orderRepo = orderRepo;
         this.itemsRepo = itemsRepo;
         this.orderItemQuantityRepo = orderItemQuantityRepo;
         this.userRepo = userRepo;
         this.emailService = emailService;
     }
-
 
     @Override
     public CommonResponse createOrder(OrderDto orderDto) {
@@ -96,17 +91,14 @@ public class OrderServiceImpl implements OrderService {
         if (itemQuantities == null) {
             return false;
         }
-
         for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
             Long itemId = entry.getKey();
             Integer quantityOrdered = entry.getValue();
-
             Items item = itemsRepo.findById(itemId).orElse(null);
             if (item == null || item.getItemCount() < quantityOrdered) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -118,7 +110,6 @@ public class OrderServiceImpl implements OrderService {
             for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
                 Long itemId = entry.getKey();
                 Integer quantity = entry.getValue();
-
                 Items item = itemsRepo.findById(itemId).orElse(null);
                 if (item != null) {
                     // Create order item quantity record
@@ -145,13 +136,11 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-
     private void saveOrderItemQuantities(Order order, Map<Long, Integer> itemQuantities) {
         if (itemQuantities != null) {
             for (Map.Entry<Long, Integer> entry : itemQuantities.entrySet()) {
                 Long itemId = entry.getKey();
                 Integer quantity = entry.getValue();
-
                 Items item = itemsRepo.findById(itemId).orElse(null);
                 if (item != null) {
                     OrderItemQuantity orderItemQty = new OrderItemQuantity();
@@ -224,6 +213,67 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public List<OrderResponseDTO> getOrdersAsDTO() {
+        List<Order> orders = orderRepo.findAll();
+        return orders.stream()
+                .map(this::convertToOrderResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private OrderResponseDTO convertToOrderResponseDTO(Order order) {
+        OrderResponseDTO dto = new OrderResponseDTO();
+        dto.setId(order.getId());
+        dto.setCreatedAt(order.getCreatedAt());
+        dto.setReceiverAddress(order.getReceiverAddress());
+        dto.setOrderTotal(order.getOrderTotal());
+        dto.setZip(order.getZip());
+        dto.setCommonStatus(order.getCommonStatus());
+        dto.setOrderStatus(order.getOrderStatus());
+        dto.setPaymentStatus(order.getPaymentStatus());
+        dto.setUserId(order.getUserId());
+
+        if (order.getOrderItems() != null) {
+            List<OrderItemResponseDTO> orderItems = order.getOrderItems().stream()
+                    .map(this::convertToOrderItemResponseDTO)
+                    .collect(Collectors.toList());
+            dto.setOrderItems(orderItems);
+        }
+
+        return dto;
+    }
+
+    private OrderItemResponseDTO convertToOrderItemResponseDTO(OrderItemQuantity orderItemQuantity) {
+        OrderItemResponseDTO dto = new OrderItemResponseDTO();
+        dto.setId(orderItemQuantity.getId());
+        dto.setQuantity(orderItemQuantity.getQuantity());
+
+        if (orderItemQuantity.getItem() != null) {
+            ItemResponseDTO itemDTO = new ItemResponseDTO();
+            Items item = orderItemQuantity.getItem();
+
+            itemDTO.setId(item.getId());
+            itemDTO.setName(item.getName());
+            itemDTO.setUnitPrice(item.getUnitPrice());
+            itemDTO.setDescription(item.getDescription());
+            itemDTO.setCategory(item.getCategory());
+            itemDTO.setImage(item.getImage());
+            itemDTO.setCommonStatus(item.getCommonStatus());
+            itemDTO.setItemCount(item.getItemCount());
+            itemDTO.setSalesCount(item.getSalesCount());
+            itemDTO.setDiscount(item.getDiscount());
+            itemDTO.setReOrderLevel(item.getReOrderLevel());
+
+            if (item.getSubCategory() != null) {
+                itemDTO.setSubCategoryName(item.getSubCategory().getName());
+            }
+
+            dto.setItem(itemDTO);
+        }
+
+        return dto;
+    }
+
+    @Override
     public CommonResponse updatePaymentStatus(OrderDto orderDto) {
         CommonResponse commonResponse = new CommonResponse();
         try {
@@ -248,7 +298,6 @@ public class OrderServiceImpl implements OrderService {
                 // Adapt your email service to handle orders
                 // emailService.sendOrderStatusUpdateEmail(existingOrder, user);
             }
-
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in OrderService -> updatePaymentStatus()", e);
             commonResponse.setStatus(false);
@@ -282,7 +331,6 @@ public class OrderServiceImpl implements OrderService {
                 // Adapt your email service to handle orders
                 // emailService.sendOrderStatusUpdateEmail(existingOrder, user);
             }
-
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in OrderService -> updateOrderStatus()", e);
             commonResponse.setStatus(false);
@@ -296,7 +344,6 @@ public class OrderServiceImpl implements OrderService {
         CommonResponse commonResponse = new CommonResponse();
         try {
             List<Order> orderList = orderRepo.findByUserId(userId);
-
             if (!orderList.isEmpty()) {
                 List<OrderDto> orderDtoList = orderList.stream()
                         .map(this::castEntityToDto)
@@ -317,21 +364,15 @@ public class OrderServiceImpl implements OrderService {
 
     private Order castOrderDtoToEntity(OrderDto orderDto) {
         Order order = new Order();
-
         // Set basic order information
-        order.setCreatedAt(orderDto.getCreatedAt() != null ?
-                orderDto.getCreatedAt() :
-                LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        order.setCreatedAt(orderDto.getCreatedAt() != null ? orderDto.getCreatedAt() : LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         order.setReceiverAddress(orderDto.getReceiverAddress());
         order.setOrderTotal(Double.valueOf(orderDto.getTotalPrice()));
         order.setZip(orderDto.getZip());
         order.setCommonStatus(CommonStatus.ACTIVE);
-        order.setOrderStatus(orderDto.getOrderStatus() != null ?
-                orderDto.getOrderStatus() : OrderStatus.PENDING);
-        order.setPaymentStatus(orderDto.getPaymentStatus() != null ?
-                orderDto.getPaymentStatus() : PaymentStatus.NOT_PAID);
+        order.setOrderStatus(orderDto.getOrderStatus() != null ? orderDto.getOrderStatus() : OrderStatus.PENDING);
+        order.setPaymentStatus(orderDto.getPaymentStatus() != null ? orderDto.getPaymentStatus() : PaymentStatus.NOT_PAID);
         order.setUserId(orderDto.getUserId());
-
         return order;
     }
 
@@ -355,29 +396,24 @@ public class OrderServiceImpl implements OrderService {
             }
             orderDto.setItemQuantities(itemQuantities);
         }
-
         return orderDto;
     }
 
     private List<String> orderValidation(OrderDto orderDto) {
         List<String> validationList = new ArrayList<>();
-
         if (CommonValidation.stringNullValidation(orderDto.getReceiverAddress())) {
             validationList.add("Receiver address cannot be empty");
         }
-
         if (CommonValidation.stringNullValidation(orderDto.getTotalPrice())) {
             validationList.add("Total price cannot be empty");
         }
-
         if (CommonValidation.stringNullValidation(orderDto.getUserId())) {
             validationList.add("User ID cannot be empty");
         }
-
         if (orderDto.getItemQuantities() == null || orderDto.getItemQuantities().isEmpty()) {
             validationList.add("Order must contain at least one item");
         }
-
         return validationList;
     }
 }
+

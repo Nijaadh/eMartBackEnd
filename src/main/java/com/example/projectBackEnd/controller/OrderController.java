@@ -1,6 +1,7 @@
 package com.example.projectBackEnd.controller;
 
 import com.example.projectBackEnd.dto.OrderDto;
+import com.example.projectBackEnd.dto.OrderResponseDTO;
 import com.example.projectBackEnd.entity.Order;
 import com.example.projectBackEnd.service.OrderService;
 import com.example.projectBackEnd.util.CommonResponse;
@@ -51,8 +52,8 @@ public class OrderController {
     }
 
     @GetMapping("/list")
-    public List<Order> getOrders() {
-        return orderService.getOrders();
+    public List<OrderResponseDTO> getOrders() {
+        return orderService.getOrdersAsDTO();
     }
 
     @PutMapping("/update-payment-status")

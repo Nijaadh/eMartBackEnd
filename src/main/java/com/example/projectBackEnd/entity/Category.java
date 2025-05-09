@@ -1,6 +1,7 @@
 package com.example.projectBackEnd.entity;
-import com.example.projectBackEnd.constant.CommonStatus;
 
+import com.example.projectBackEnd.constant.CommonStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,5 +33,6 @@ public class Category {
     private CommonStatus commonStatus;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("category")
     private Set<SubCategory> subCategories = new HashSet<>();
 }
