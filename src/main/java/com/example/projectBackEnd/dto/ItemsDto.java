@@ -17,6 +17,7 @@ public class ItemsDto {
     private String unitPrice;
     private String Description;
     private String Category;
+    private Long categoryId;
     private String image;
     private CommonStatus commonStatus;
     private Long subCategoryId;

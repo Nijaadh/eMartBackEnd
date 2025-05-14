@@ -81,46 +81,93 @@ public class ItemsServiceImpl implements ItemService {
         return commonResponse;
     }
 
-    
+
     @Override
     public CommonResponse updateItems(ItemsDto itemsDto) {
         CommonResponse commonResponse = new CommonResponse();
         try {
-            if (itemsDto.getId() == null) {
+            // Validate input
+            if (itemsDto.getId() == null || itemsDto.getId().isEmpty()) {
                 commonResponse.setStatus(false);
-                commonResponse.setErrorMessages(Collections.singletonList("Item ID is required for update."));
+                commonResponse.setErrorMessages(Collections.singletonList("Item ID is required for update"));
                 return commonResponse;
             }
-            Items existingItem = itemsRepo.findById(Long.valueOf(itemsDto.getId()))
-                    .orElseThrow(() -> new RuntimeException("Item not found"));
+
+            // Find the item to update
+            Optional<Items> optionalItem = itemsRepo.findById(Long.parseLong(itemsDto.getId()));
+            if (!optionalItem.isPresent()) {
+                commonResponse.setStatus(false);
+                commonResponse.setErrorMessages(Collections.singletonList("Item not found with ID: " + itemsDto.getId()));
+                return commonResponse;
+            }
+
+            Items existingItem = optionalItem.get();
+
+            // Update basic fields
             existingItem.setName(itemsDto.getName());
+            existingItem.setUnitPrice(Double.parseDouble(itemsDto.getUnitPrice()));
             existingItem.setDescription(itemsDto.getDescription());
-            existingItem.setUnitPrice(Double.valueOf(itemsDto.getUnitPrice()));
+            existingItem.setCategory(itemsDto.getCategory());
+            existingItem.setImage(itemsDto.getImage());
             existingItem.setCommonStatus(itemsDto.getCommonStatus());
             existingItem.setItemCount(itemsDto.getItemCount());
-            existingItem.setSalesCount(itemsDto.getSalesCount());
-            existingItem.setDiscount(itemsDto.getDiscount() != null ? Double.valueOf(itemsDto.getDiscount()) : null);
+            existingItem.setDiscount(Double.parseDouble(itemsDto.getDiscount()));
             existingItem.setReOrderLevel(itemsDto.getReOrderLevel());
 
-            // Note: We don't update createdAt during updates
-            // The createdAt field should remain as it was when the item was first created
-
+            // Update subcategory if provided
             if (itemsDto.getSubCategoryId() != null) {
-                SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId())
-                        .orElse(null);
+                SubCategory subCategory = subCategoryRepo.findById(itemsDto.getSubCategoryId()).orElse(null);
                 existingItem.setSubCategory(subCategory);
             }
+
+            // Save the updated item
             Items updatedItem = itemsRepo.save(existingItem);
-            // Convert to the new DTO with category and subcategory names
-            ItemsDtoWithCatagoryNames itemWithNames = castItemsEntityToDtoWithNames(updatedItem);
+
+            // Convert to DTO with category information for response
+            ItemsDtoWithCatagoryNames responseDto = convertToItemsDtoWithCategoryNames(updatedItem);
+
             commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList(itemWithNames));
+            commonResponse.setPayload(Collections.singletonList(responseDto));
         } catch (Exception e) {
-            LOGGER.error("/**************** Exception in ProductService -> updateProduct()", e);
             commonResponse.setStatus(false);
-            commonResponse.setErrorMessages(Collections.singletonList("An error occurred while updating the product."));
+            commonResponse.setErrorMessages(Collections.singletonList("Error updating item: " + e.getMessage()));
+            e.printStackTrace();
         }
         return commonResponse;
+    }
+
+    // Helper method to convert Items entity to ItemsDtoWithCatagoryNames
+    private ItemsDtoWithCatagoryNames convertToItemsDtoWithCategoryNames(Items item) {
+        ItemsDtoWithCatagoryNames dto = new ItemsDtoWithCatagoryNames();
+
+        // Map basic fields
+        dto.setId(item.getId().toString());
+        dto.setName(item.getName());
+        dto.setUnitPrice(item.getUnitPrice() != null ? item.getUnitPrice().toString() : null);
+        dto.setDescription(item.getDescription());
+        dto.setCategory(item.getCategory());
+        dto.setImage(item.getImage());
+        dto.setCommonStatus(item.getCommonStatus());
+        dto.setItemCount(item.getItemCount());
+        dto.setSalesCount(item.getSalesCount());
+        dto.setDiscount(item.getDiscount() != null ? item.getDiscount().toString() : null);
+        dto.setReOrderLevel(item.getReOrderLevel());
+        dto.setCreatedAt(item.getCreatedAt());
+
+        // Map SubCategory and Category related fields
+        if (item.getSubCategory() != null) {
+            SubCategory subCategory = item.getSubCategory();
+            dto.setSubCategoryId(subCategory.getId());
+            dto.setSubCategoryName(subCategory.getName());
+
+            // Map Category fields if SubCategory has a Category
+            if (subCategory.getCategory() != null) {
+                dto.setCatagoryName(subCategory.getCategory().getName());
+                dto.setCategoryId(subCategory.getCategory().getId());
+            }
+        }
+
+        return dto;
     }
 
 
