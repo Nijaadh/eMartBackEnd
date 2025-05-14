@@ -4,10 +4,7 @@ import com.example.projectBackEnd.constant.CommonStatus;
 import com.example.projectBackEnd.constant.OrderStatus;
 import com.example.projectBackEnd.constant.PaymentStatus;
 import com.example.projectBackEnd.dto.*;
-import com.example.projectBackEnd.entity.Items;
-import com.example.projectBackEnd.entity.Order;
-import com.example.projectBackEnd.entity.OrderItemQuantity;
-import com.example.projectBackEnd.entity.User;
+import com.example.projectBackEnd.entity.*;
 import com.example.projectBackEnd.repo.ItemsRepo;
 import com.example.projectBackEnd.repo.OrderItemQuantityRepo;
 import com.example.projectBackEnd.repo.OrderRepo;
@@ -345,9 +342,74 @@ public class OrderServiceImpl implements OrderService {
         try {
             List<Order> orderList = orderRepo.findByUserId(userId);
             if (!orderList.isEmpty()) {
-                List<OrderDto> orderDtoList = orderList.stream()
-                        .map(this::castEntityToDto)
-                        .collect(Collectors.toList());
+                List<OrderDto> orderDtoList = new ArrayList<>();
+
+                for (Order order : orderList) {
+                    OrderDto orderDto = new OrderDto();
+                    orderDto.setId(order.getId());
+                    orderDto.setCreatedAt(order.getCreatedAt());
+                    orderDto.setReceiverAddress(order.getReceiverAddress());
+                    orderDto.setTotalPrice(String.valueOf(order.getOrderTotal()));
+                    orderDto.setZip(order.getZip());
+                    orderDto.setCommonStatus(order.getCommonStatus());
+                    orderDto.setOrderStatus(order.getOrderStatus());
+                    orderDto.setPaymentStatus(order.getPaymentStatus());
+                    orderDto.setUserId(order.getUserId());
+
+                    // Create a map for item quantities and a list for detailed items
+                    Map<Long, Integer> itemQuantities = new HashMap<>();
+                    List<Map<String, Object>> itemDetailsList = new ArrayList<>();
+
+                    if (order.getOrderItems() != null) {
+                        for (OrderItemQuantity oiq : order.getOrderItems()) {
+                            Items item = oiq.getItem();
+                            if (item != null) {
+                                itemQuantities.put(item.getId(), oiq.getQuantity());
+
+                                // Create a map with all item details
+                                Map<String, Object> itemDetails = new HashMap<>();
+                                itemDetails.put("id", item.getId());
+                                itemDetails.put("name", item.getName());
+                                itemDetails.put("unitPrice", item.getUnitPrice());
+                                itemDetails.put("description", item.getDescription());
+                                itemDetails.put("category", item.getCategory());
+                                itemDetails.put("image", item.getImage());
+                                itemDetails.put("commonStatus", item.getCommonStatus());
+                                itemDetails.put("itemCount", item.getItemCount());
+                                itemDetails.put("salesCount", item.getSalesCount());
+                                itemDetails.put("discount", item.getDiscount());
+                                itemDetails.put("reOrderLevel", item.getReOrderLevel());
+                                itemDetails.put("quantity", oiq.getQuantity());
+
+                                // Explicitly set default values
+                                itemDetails.put("subCategoryId", null);
+                                itemDetails.put("subCategoryName", null);
+                                itemDetails.put("categoryId", null);
+                                itemDetails.put("categoryName", null);
+
+                                // Add subcategory and category details if available
+                                if (item.getSubCategory() != null) {
+                                    SubCategory subCategory = item.getSubCategory();
+                                    itemDetails.put("subCategoryId", subCategory.getId());
+                                    itemDetails.put("subCategoryName", subCategory.getName());
+
+                                    if (subCategory.getCategory() != null) {
+                                        itemDetails.put("categoryId", subCategory.getCategory().getId());
+                                        itemDetails.put("categoryName", subCategory.getCategory().getName());
+                                    }
+                                }
+
+                                itemDetailsList.add(itemDetails);
+                            }
+                        }
+                    }
+
+                    orderDto.setItemQuantities(itemQuantities);
+                    orderDto.setItemDetails(itemDetailsList);
+
+                    orderDtoList.add(orderDto);
+                }
+
                 commonResponse.setStatus(true);
                 commonResponse.setPayload(Collections.singletonList(orderDtoList));
             } else {
@@ -358,9 +420,12 @@ public class OrderServiceImpl implements OrderService {
             SchemaToolingLogging.LOGGER.error("/**************** Exception in OrderService -> getAllOrdersByUserId()", e);
             commonResponse.setStatus(false);
             commonResponse.setErrorMessages(Collections.singletonList("An error occurred while fetching orders for the user."));
+            e.printStackTrace();
         }
         return commonResponse;
     }
+
+
 
     private Order castOrderDtoToEntity(OrderDto orderDto) {
         Order order = new Order();

@@ -28,4 +28,5 @@ public class ItemsDtoWithCatagoryNames {
     private String catagoryName;
     private String subCategoryName;
     private Timestamp createdAt;
+    private Long categoryId;
 }

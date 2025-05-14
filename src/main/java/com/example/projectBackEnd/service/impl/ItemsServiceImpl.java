@@ -157,24 +157,51 @@ public class ItemsServiceImpl implements ItemService {
     public CommonResponse getItemsByIds(List<Long> itemIds) {
         CommonResponse commonResponse = new CommonResponse();
         try {
-            // Fetch items by the given list of item IDs
-            List<Items> itemsList = itemsRepo.findAllById(itemIds);
+            List<Items> items = itemsRepo.findAllById(itemIds);
+            List<ItemsDtoWithCatagoryNames> itemsDtos = new ArrayList<>();
 
-            // Convert entities to DTOs with category and subcategory names
-            List<ItemsDtoWithCatagoryNames> itemsDtoList = itemsList.stream()
-                    .map(this::castItemsEntityToDtoWithNames)
-                    .collect(Collectors.toList());
+            for (Items item : items) {
+                ItemsDtoWithCatagoryNames dto = new ItemsDtoWithCatagoryNames();
 
-            // Set response status and payload
+                // Map basic fields
+                dto.setId(item.getId().toString());
+                dto.setName(item.getName());
+                dto.setUnitPrice(item.getUnitPrice() != null ? item.getUnitPrice().toString() : null);
+                dto.setDescription(item.getDescription());
+                dto.setCategory(item.getCategory());
+                dto.setImage(item.getImage());
+                dto.setCommonStatus(item.getCommonStatus());
+                dto.setItemCount(item.getItemCount());
+                dto.setSalesCount(item.getSalesCount());
+                dto.setDiscount(item.getDiscount() != null ? item.getDiscount().toString() : null);
+                dto.setReOrderLevel(item.getReOrderLevel());
+                dto.setCreatedAt(item.getCreatedAt());
+
+                // Map SubCategory and Category related fields
+                if (item.getSubCategory() != null) {
+                    SubCategory subCategory = item.getSubCategory();
+                    dto.setSubCategoryId(subCategory.getId());
+                    dto.setSubCategoryName(subCategory.getName());
+
+                    // Map Category fields if SubCategory has a Category
+                    if (subCategory.getCategory() != null) {
+                        dto.setCatagoryName(subCategory.getCategory().getName());
+                        dto.setCategoryId(subCategory.getCategory().getId());
+                    }
+                }
+
+                itemsDtos.add(dto);
+            }
+
+            commonResponse.setPayload(Collections.singletonList(itemsDtos));
             commonResponse.setStatus(true);
-            commonResponse.setPayload(Collections.singletonList(itemsDtoList));
         } catch (Exception e) {
             commonResponse.setStatus(false);
-            commonResponse.setErrorMessages(Collections.singletonList("An error occurred while fetching items."));
-            //e.printStackTrace();
+            commonResponse.getErrorMessages().add("Error retrieving items: " + e.getMessage());
         }
         return commonResponse;
     }
+
 
     @Override
     public CommonResponse searchByName(String name) {

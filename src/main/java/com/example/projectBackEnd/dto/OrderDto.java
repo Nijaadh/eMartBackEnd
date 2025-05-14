@@ -7,8 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -24,4 +24,5 @@ public class OrderDto {
     private PaymentStatus paymentStatus;
     private String userId;
     private Map<Long, Integer> itemQuantities; // Map of item ID to quantity
+    private List<Map<String, Object>> itemDetails; // Added field for detailed item information
 }
