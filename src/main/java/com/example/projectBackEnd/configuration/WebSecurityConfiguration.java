@@ -88,7 +88,8 @@ public class WebSecurityConfiguration  extends WebSecurityConfigurerAdapter {
                         "/api/items/add",
                         "/api/items/search",
                         "/api/items/getAll",
-
+                "/api/user/update",
+                       "/api/user/{id}",
 
                         // "/api/admin/user/count",
                         "/api/admin/**",

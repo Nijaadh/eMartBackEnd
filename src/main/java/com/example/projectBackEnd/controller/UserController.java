@@ -28,6 +28,7 @@ public class UserController {
     public boolean checkUserName(@RequestParam String userName) {
         return userService.isUserNameExists(userName);
     }
+
     @GetMapping("/check-email")
     public boolean checkEmail(@RequestParam String email) {
         return userService.isEmailExists(email);
@@ -38,4 +39,18 @@ public class UserController {
         return userService.getAll();
     }
 
+    @GetMapping("/{id}")
+    public CommonResponse getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
+    }
+
+    @PutMapping("/update")
+    public CommonResponse updateUser(@RequestBody UserDto userDto) {
+        return userService.updateUser(userDto);
+    }
+
+    @DeleteMapping("/{id}")
+    public CommonResponse deleteUser(@PathVariable Long id) {
+        return userService.deleteUser(id);
+    }
 }
