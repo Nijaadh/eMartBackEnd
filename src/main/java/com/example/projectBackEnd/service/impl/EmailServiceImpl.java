@@ -4,203 +4,147 @@ import com.example.projectBackEnd.entity.Gift;
 import com.example.projectBackEnd.entity.Order;
 import com.example.projectBackEnd.entity.User;
 import com.example.projectBackEnd.service.EmailService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.Locale;
-
-import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
+    private static final Logger LOGGER = Logger.getLogger(EmailServiceImpl.class.getName());
 
     @Autowired
-    private JavaMailSender emailSender;
+    private JavaMailSender mailSender;
 
     @Autowired
     private TemplateEngine templateEngine;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
-
-    @Async
     @Override
     public void sendRegistrationEmail(User user) {
         try {
-            // Prepare the evaluation context
-            final Context ctx = new Context(Locale.getDefault());
-            ctx.setVariable("userName", user.getUserName());
+            Context context = new Context();
+            context.setVariable("userName", user.getUserName());
 
-            // Create the HTML body using Thymeleaf
-            final String htmlContent = templateEngine.process("emails/registration-email", ctx);
+            String process = templateEngine.process("emails/registration-email", context);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setSubject("Welcome to Gift Shop!");
+            helper.setText(process, true);
+            helper.setTo(user.getEmail());
+            mailSender.send(mimeMessage);
 
-            // Send email
-            sendHtmlEmail(user.getEmail(), "Welcome to Gift Shop - Registration Successful", htmlContent);
-
-            logger.info("Registration email sent to: {}", user.getEmail());
-        } catch (Exception e) {
-            logger.error("Failed to send registration email to {}: {}", user.getEmail(), e.getMessage());
+            LOGGER.info("Registration email sent to: " + user.getEmail());
+        } catch (MessagingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to send registration email", e);
         }
     }
 
-    @Async
     @Override
     public void sendOrderConfirmationEmail(Gift gift, User user) {
-        try {
-            // Prepare the evaluation context
-            final Context ctx = new Context(Locale.getDefault());
-            ctx.setVariable("userName", user.getUserName());
-            ctx.setVariable("orderId", gift.getId());
-            ctx.setVariable("totalPrice", String.format("%.2f", gift.getTotalPrice()));
-            ctx.setVariable("shippingAddress", gift.getRecieverAddress());
-
-            // Create the HTML body using Thymeleaf
-            final String htmlContent = templateEngine.process("emails/order-confirmation", ctx);
-
-            // Send email
-            sendHtmlEmail(user.getEmail(), "Gift Shop - Order Confirmation #" + gift.getId(), htmlContent);
-
-            logger.info("Order confirmation email sent to: {}", user.getEmail());
-        } catch (Exception e) {
-            logger.error("Failed to send order confirmation email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        // Legacy method for Gift entity
     }
 
-    @Async
     @Override
     public void sendOrderReadyEmail(Gift gift, User user) {
-        try {
-            // Prepare the evaluation context
-            final Context ctx = new Context(Locale.getDefault());
-            ctx.setVariable("userName", user.getUserName());
-            ctx.setVariable("orderId", gift.getId());
-            ctx.setVariable("shippingAddress", gift.getRecieverAddress());
-
-            // Create the HTML body using Thymeleaf
-            final String htmlContent = templateEngine.process("emails/order-ready", ctx);
-
-            // Send email
-            sendHtmlEmail(user.getEmail(), "Gift Shop - Order #" + gift.getId() + " Ready for Delivery", htmlContent);
-
-            logger.info("Order ready email sent to: {}", user.getEmail());
-        } catch (Exception e) {
-            logger.error("Failed to send order ready email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        // Legacy method for Gift entity
     }
 
-    @Async
     @Override
     public void sendOrderDeliveredEmail(Gift gift, User user) {
-        try {
-            // Prepare the evaluation context
-            final Context ctx = new Context(Locale.getDefault());
-            ctx.setVariable("userName", user.getUserName());
-            ctx.setVariable("orderId", gift.getId());
-            ctx.setVariable("shippingAddress", gift.getRecieverAddress());
-
-            // Create the HTML body using Thymeleaf
-            final String htmlContent = templateEngine.process("emails/order-delivered", ctx);
-
-            // Send email
-            sendHtmlEmail(user.getEmail(), "Gift Shop - Order #" + gift.getId() + " Delivered", htmlContent);
-
-            logger.info("Order delivered email sent to: {}", user.getEmail());
-        } catch (Exception e) {
-            logger.error("Failed to send order delivered email to {}: {}", user.getEmail(), e.getMessage());
-        }
+        // Legacy method for Gift entity
     }
 
-    // Add these methods to your existing EmailServiceImpl class
-
+    @Override
     public void sendOrderConfirmationEmail(Order order, User user) {
         try {
-            String subject = "Order Confirmation - Order #" + order.getId();
+            Context context = new Context();
+            context.setVariable("userName", user.getUserName());
+            context.setVariable("orderId", order.getId());
+            context.setVariable("totalPrice", order.getOrderTotal());
+            context.setVariable("shippingAddress", order.getReceiverAddress());
 
-            StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.append("Dear ").append(user.getUserName()).append(",\n\n");
-            messageBuilder.append("Thank you for your order. Your order has been received and is being processed.\n\n");
-            messageBuilder.append("Order Details:\n");
-            messageBuilder.append("Order ID: ").append(order.getId()).append("\n");
-            messageBuilder.append("Order Date: ").append(order.getCreatedAt()).append("\n");
-            messageBuilder.append("Total Amount: $").append(order.getOrderTotal()).append("\n\n");
-            messageBuilder.append("Shipping Address:\n");
-            messageBuilder.append(order.getReceiverAddress()).append("\n");
-            messageBuilder.append("Zip: ").append(order.getZip()).append("\n\n");
-            messageBuilder.append("We will notify you when your order has been shipped.\n\n");
-            messageBuilder.append("Thank you for shopping with us!\n\n");
-            messageBuilder.append("Best regards,\n");
-            messageBuilder.append("Your Online Store Team");
+            String process = templateEngine.process("emails/order-confirmation", context);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setSubject("Order Confirmation - #" + order.getId());
+            helper.setText(process, true);
+            helper.setTo(user.getEmail());
+            mailSender.send(mimeMessage);
 
-            sendHtmlEmail(user.getEmail(), subject, messageBuilder.toString());
-        } catch (Exception e) {
-            LOGGER.error("Error sending order confirmation email", e);
+            LOGGER.info("Order confirmation email sent to: " + user.getEmail());
+        } catch (MessagingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to send order confirmation email", e);
         }
     }
 
+    @Override
     public void sendOrderStatusUpdateEmail(Order order, User user) {
         try {
-            String subject = "Order Status Update - Order #" + order.getId();
+            Context context = new Context();
+            context.setVariable("userName", user.getUserName());
+            context.setVariable("orderId", order.getId());
+            context.setVariable("shippingAddress", order.getReceiverAddress());
 
-            StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.append("Dear ").append(user.getUserName()).append(",\n\n");
-            messageBuilder.append("We're writing to inform you that the status of your order has been updated.\n\n");
-            messageBuilder.append("Order Details:\n");
-            messageBuilder.append("Order ID: ").append(order.getId()).append("\n");
-            messageBuilder.append("Order Date: ").append(order.getCreatedAt()).append("\n");
-            messageBuilder.append("Current Status: ").append(order.getOrderStatus()).append("\n");
-            messageBuilder.append("Payment Status: ").append(order.getPaymentStatus()).append("\n\n");
+            String templateName;
+            String subject;
 
-            // Add specific messages based on order status
             switch (order.getOrderStatus()) {
                 case PROCESSING:
-                    messageBuilder.append("Your order is now being processed. We'll notify you once it's shipped.\n\n");
+                    templateName = "emails/order-processing";
+                    subject = "Your Order is Being Processed - #" + order.getId();
                     break;
                 case SHIPPED:
-                    messageBuilder.append("Great news! Your order has been shipped and is on its way to you.\n\n");
+                    templateName = "emails/order-shipped";
+                    subject = "Your Order Has Shipped - #" + order.getId();
                     break;
                 case DELEVERD:
-                    messageBuilder.append("Your order has been delivered. We hope you enjoy your purchase!\n\n");
+                    templateName = "emails/order-delivered";
+                    subject = "Your Order Has Been Delivered - #" + order.getId();
                     break;
                 default:
-                    messageBuilder.append("Your order status has been updated. Please check your account for more details.\n\n");
+                    templateName = "emails/order-confirmation";
+                    subject = "Order Status Update - #" + order.getId();
             }
 
-            messageBuilder.append("Thank you for shopping with us!\n\n");
-            messageBuilder.append("Best regards,\n");
-            messageBuilder.append("Your Online Store Team");
+            String process = templateEngine.process(templateName, context);
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setSubject(subject);
+            helper.setText(process, true);
+            helper.setTo(user.getEmail());
+            mailSender.send(mimeMessage);
 
-            sendHtmlEmail(user.getEmail(), subject, messageBuilder.toString());
-        } catch (Exception e) {
-            LOGGER.error("Error sending order status update email", e);
+            LOGGER.info("Order status update email sent to: " + user.getEmail() + " for status: " + order.getOrderStatus());
+        } catch (MessagingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to send order status update email", e);
         }
     }
 
-    /**
-     * Helper method to send HTML emails
-     */
-    private void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException {
-        MimeMessage message = emailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+    // Helper method to send a generic email with a template
+    private void sendTemplateEmail(String to, String subject, String templateName, Context context) {
+        try {
+            String htmlContent = templateEngine.process(templateName, context);
 
-        helper.setFrom(fromEmail);
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true); // true indicates HTML content
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-        emailSender.send(message);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(mimeMessage);
+            LOGGER.info("Email sent successfully to: " + to + " with subject: " + subject);
+        } catch (MessagingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to send email to: " + to, e);
+        }
     }
-
-
 }
+

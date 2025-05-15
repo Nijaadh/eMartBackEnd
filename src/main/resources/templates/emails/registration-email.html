@@ -2,60 +2,135 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to Gift Shop</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 600px;
             margin: 0 auto;
+            background-color: #f7f7f7;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
         }
         .header {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             color: white;
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-weight: 300;
+            font-size: 28px;
+        }
+        .logo {
+            max-width: 120px;
+            margin-bottom: 15px;
         }
         .content {
-            padding: 20px;
-            background-color: #f9f9f9;
+            padding: 30px;
+            background-color: white;
         }
-        .footer {
-            text-align: center;
-            padding: 10px;
-            font-size: 12px;
-            color: #777;
+        .welcome-message {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .details {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #2575fc;
         }
         .button {
             display: inline-block;
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             color: white;
-            padding: 10px 20px;
+            padding: 12px 30px;
             text-decoration: none;
-            border-radius: 5px;
-            margin-top: 15px;
+            border-radius: 50px;
+            margin: 20px 0;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+            background-color: #f7f7f7;
+            border-top: 1px solid #eeeeee;
+        }
+        .social-links {
+            margin: 15px 0;
+        }
+        .social-icon {
+            display: inline-block;
+            margin: 0 8px;
+            width: 32px;
+            height: 32px;
         }
     </style>
 </head>
 <body>
-<div class="header">
-    <h1>Welcome to Gift Shop!</h1>
-</div>
-<div class="content">
-    <p>Dear <span th:text="${userName}"></span>,</p>
+<div class="container">
+    <div class="header">
+        <img src="https://via.placeholder.com/120x60?text=Gift+Shop" alt="Gift Shop Logo" class="logo">
+        <h1>Welcome to emart!</h1>
+    </div>
 
-    <p>Thank you for registering with Gift Shop. Your account has been successfully created.</p>
+    <div class="content">
+        <p class="welcome-message">Hello <span th:text="${userName}"></span>,</p>
 
-    <p><strong>Username:</strong> <span th:text="${userName}"></span></p>
+        <p>Thank you for joining Gift Shop! We're excited to have you as part of our community.</p>
 
-    <p>You can now log in and start shopping!</p>
+        <div class="details">
+            <p><strong>Username:</strong> <span th:text="${userName}"></span></p>
+            <p>Your account has been successfully created and is ready to use.</p>
+        </div>
 
-    <a class="button" href="http://localhost:4200/login">Login to Your Account</a>
-</div>
-<div class="footer">
-    <p>&copy; 2025 Gift Shop. All rights reserved.</p>
-    <p>This is an automated email, please do not reply.</p>
+        <p>With your new account, you can:</p>
+        <ul>
+            <li>Browse our exclusive collection of gifts</li>
+            <li>Save your favorite items</li>
+            <li>Track your orders easily</li>
+            <li>Enjoy personalized recommendations</li>
+        </ul>
+
+        <div style="text-align: center;">
+            <a href="http://localhost:4200/login" class="button">Start Shopping Now</a>
+        </div>
+
+        <p>If you have any questions or need assistance, please don't hesitate to contact our customer support team.</p>
+
+        <p>Happy shopping!</p>
+        <p>The emart Team</p>
+    </div>
+
+    <div class="footer">
+        <div class="social-links">
+            <a href="#"><img src="https://via.placeholder.com/32x32?text=FB" alt="Facebook" class="social-icon"></a>
+            <a href="#"><img src="https://via.placeholder.com/32x32?text=IG" alt="Instagram" class="social-icon"></a>
+            <a href="#"><img src="https://via.placeholder.com/32x32?text=TW" alt="Twitter" class="social-icon"></a>
+        </div>
+        <p>&copy; 2025 eemart. All rights reserved.</p>
+        <p>This is an automated message, please do not reply.</p>
+    </div>
 </div>
 </body>
 </html>

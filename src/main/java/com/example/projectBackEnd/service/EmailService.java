@@ -11,4 +11,5 @@ public interface EmailService {
     void sendOrderDeliveredEmail(Gift gift, User user);
     void sendOrderConfirmationEmail(Order order, User user);
     void sendOrderStatusUpdateEmail(Order order, User user);
+
 }

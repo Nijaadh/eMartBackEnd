@@ -70,8 +70,7 @@ public class OrderServiceImpl implements OrderService {
             // Send email confirmation
             User user = userRepo.findById(Long.valueOf(order.getUserId())).orElse(null);
             if (user != null) {
-                // You'll need to adapt your email service to handle orders
-                // emailService.sendOrderConfirmationEmail(order, user);
+                emailService.sendOrderConfirmationEmail(order, user);
             }
         } catch (Exception e) {
             commonResponse.setStatus(false);
@@ -235,7 +234,6 @@ public class OrderServiceImpl implements OrderService {
                     .collect(Collectors.toList());
             dto.setOrderItems(orderItems);
         }
-
         return dto;
     }
 
@@ -247,7 +245,6 @@ public class OrderServiceImpl implements OrderService {
         if (orderItemQuantity.getItem() != null) {
             ItemResponseDTO itemDTO = new ItemResponseDTO();
             Items item = orderItemQuantity.getItem();
-
             itemDTO.setId(item.getId());
             itemDTO.setName(item.getName());
             itemDTO.setUnitPrice(item.getUnitPrice());
@@ -263,10 +260,8 @@ public class OrderServiceImpl implements OrderService {
             if (item.getSubCategory() != null) {
                 itemDTO.setSubCategoryName(item.getSubCategory().getName());
             }
-
             dto.setItem(itemDTO);
         }
-
         return dto;
     }
 
@@ -283,17 +278,21 @@ public class OrderServiceImpl implements OrderService {
             Order existingOrder = orderRepo.findById(orderDto.getId())
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
+            // Save the previous status to check if it changed
+            PaymentStatus previousStatus = existingOrder.getPaymentStatus();
+
             existingOrder.setPaymentStatus(orderDto.getPaymentStatus());
             orderRepo.save(existingOrder);
 
             commonResponse.setStatus(true);
             commonResponse.setPayload(Collections.singletonList("Payment status updated successfully"));
 
-            // Send email notification
-            User user = userRepo.findById(Long.valueOf(existingOrder.getUserId())).orElse(null);
-            if (user != null) {
-                // Adapt your email service to handle orders
-                // emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+            // Send email notification if status changed
+            if (previousStatus != orderDto.getPaymentStatus()) {
+                User user = userRepo.findById(Long.valueOf(existingOrder.getUserId())).orElse(null);
+                if (user != null) {
+                    emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+                }
             }
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in OrderService -> updatePaymentStatus()", e);
@@ -316,17 +315,40 @@ public class OrderServiceImpl implements OrderService {
             Order existingOrder = orderRepo.findById(orderDto.getId())
                     .orElseThrow(() -> new RuntimeException("Order not found"));
 
+            // Save the previous status to check if it changed
+            OrderStatus previousStatus = existingOrder.getOrderStatus();
+
             existingOrder.setOrderStatus(orderDto.getOrderStatus());
             orderRepo.save(existingOrder);
 
             commonResponse.setStatus(true);
             commonResponse.setPayload(Collections.singletonList("Order status updated successfully"));
 
-            // Send email notification
-            User user = userRepo.findById(Long.valueOf(existingOrder.getUserId())).orElse(null);
-            if (user != null) {
-                // Adapt your email service to handle orders
-                // emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+            // Send email notification if status changed
+            if (previousStatus != orderDto.getOrderStatus()) {
+                User user = userRepo.findById(Long.valueOf(existingOrder.getUserId())).orElse(null);
+                if (user != null) {
+                    // Send different emails based on the new status
+                    switch (orderDto.getOrderStatus()) {
+                        case PROCESSING:
+                            // Basic status update email
+                            emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+                            break;
+                        case SHIPPED:
+                            // Order is ready for delivery/shipped
+                            // You could adapt the Gift order ready email for orders
+                            emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+                            break;
+                        case DELEVERD:
+                            // Order has been delivered
+                            // You could adapt the Gift delivered email for orders
+                            emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+                            break;
+                        default:
+                            // Basic status update email
+                            emailService.sendOrderStatusUpdateEmail(existingOrder, user);
+                    }
+                }
             }
         } catch (Exception e) {
             LOGGER.error("/**************** Exception in OrderService -> updateOrderStatus()", e);
@@ -343,10 +365,10 @@ public class OrderServiceImpl implements OrderService {
             List<Order> orderList = orderRepo.findByUserId(userId);
             if (!orderList.isEmpty()) {
                 List<OrderDto> orderDtoList = new ArrayList<>();
-
                 for (Order order : orderList) {
                     OrderDto orderDto = new OrderDto();
                     orderDto.setId(order.getId());
+                    orderDto.setCreatedAt(order.getCreatedAt());
                     orderDto.setCreatedAt(order.getCreatedAt());
                     orderDto.setReceiverAddress(order.getReceiverAddress());
                     orderDto.setTotalPrice(String.valueOf(order.getOrderTotal()));
@@ -406,7 +428,6 @@ public class OrderServiceImpl implements OrderService {
 
                     orderDto.setItemQuantities(itemQuantities);
                     orderDto.setItemDetails(itemDetailsList);
-
                     orderDtoList.add(orderDto);
                 }
 
@@ -425,10 +446,9 @@ public class OrderServiceImpl implements OrderService {
         return commonResponse;
     }
 
-
-
     private Order castOrderDtoToEntity(OrderDto orderDto) {
         Order order = new Order();
+
         // Set basic order information
         order.setCreatedAt(orderDto.getCreatedAt() != null ? orderDto.getCreatedAt() : LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         order.setReceiverAddress(orderDto.getReceiverAddress());
@@ -438,6 +458,7 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatus(orderDto.getOrderStatus() != null ? orderDto.getOrderStatus() : OrderStatus.PENDING);
         order.setPaymentStatus(orderDto.getPaymentStatus() != null ? orderDto.getPaymentStatus() : PaymentStatus.NOT_PAID);
         order.setUserId(orderDto.getUserId());
+
         return order;
     }
 
@@ -461,23 +482,29 @@ public class OrderServiceImpl implements OrderService {
             }
             orderDto.setItemQuantities(itemQuantities);
         }
+
         return orderDto;
     }
 
     private List<String> orderValidation(OrderDto orderDto) {
         List<String> validationList = new ArrayList<>();
+
         if (CommonValidation.stringNullValidation(orderDto.getReceiverAddress())) {
             validationList.add("Receiver address cannot be empty");
         }
+
         if (CommonValidation.stringNullValidation(orderDto.getTotalPrice())) {
             validationList.add("Total price cannot be empty");
         }
+
         if (CommonValidation.stringNullValidation(orderDto.getUserId())) {
             validationList.add("User ID cannot be empty");
         }
+
         if (orderDto.getItemQuantities() == null || orderDto.getItemQuantities().isEmpty()) {
             validationList.add("Order must contain at least one item");
         }
+
         return validationList;
     }
 }

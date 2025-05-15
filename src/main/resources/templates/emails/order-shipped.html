@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Delivered</title>
+    <title>Order Shipped</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,7 +21,7 @@
             margin: 20px auto;
         }
         .header {
-            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             padding: 30px 20px;
             text-align: center;
@@ -42,32 +42,32 @@
         .status-message {
             font-size: 20px;
             margin-bottom: 20px;
-            color: #43cea2;
+            color: #4facfe;
             font-weight: 600;
         }
-        .delivery-details {
+        .shipping-details {
             background-color: #f9f9f9;
             padding: 20px;
             border-radius: 6px;
             margin: 20px 0;
-            border-left: 4px solid #43cea2;
+            border-left: 4px solid #4facfe;
         }
-        .delivery-details h2 {
+        .shipping-details h2 {
             margin-top: 0;
-            color: #43cea2;
+            color: #4facfe;
             font-size: 18px;
         }
-        .delivery-details table {
+        .shipping-details table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
         }
-        .delivery-details th, .delivery-details td {
+        .shipping-details th, .shipping-details td {
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-        .delivery-details th {
+        .shipping-details th {
             font-weight: 600;
             color: #555;
         }
@@ -98,7 +98,7 @@
             z-index: 2;
         }
         .step-icon.active {
-            background-color: #43cea2;
+            background-color: #4facfe;
             color: white;
         }
         .step-label {
@@ -106,7 +106,7 @@
             color: #777;
         }
         .step-label.active {
-            color: #43cea2;
+            color: #4facfe;
             font-weight: 600;
         }
         .progress-line {
@@ -122,14 +122,14 @@
             position: absolute;
             top: 15px;
             left: 15%;
-            width: 100%;
+            width: 66%;
             height: 2px;
-            background-color: #43cea2;
+            background-color: #4facfe;
             z-index: 1;
         }
         .button {
             display: inline-block;
-            background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             padding: 12px 30px;
             text-decoration: none;
@@ -143,18 +143,6 @@
         .button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        }
-        .review-section {
-            background-color: #f0f9f4;
-            padding: 20px;
-            border-radius: 6px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        .star-rating {
-            font-size: 24px;
-            color: #ffc107;
-            margin: 10px 0;
         }
         .footer {
             text-align: center;
@@ -179,25 +167,25 @@
 <div class="container">
     <div class="header">
         <img src="https://via.placeholder.com/120x60?text=Gift+Shop" alt="emart Logo" class="logo">
-        <h1>Your Order Has Been Delivered!</h1>
+        <h1>Your Order Has Shipped!</h1>
     </div>
 
     <div class="content">
         <p>Hello <span th:text="${userName}"></span>,</p>
 
-        <p class="status-message">Your order has been delivered successfully!</p>
+        <p class="status-message">Your order is on its way!</p>
 
-        <p>Great news! Your order #<span th:text="${orderId}"></span> has been delivered to your specified address. We hope you love your new items!</p>
+        <p>We're excited to let you know that your order #<span th:text="${orderId}"></span> has been shipped and is on its way to you!</p>
 
-        <div class="delivery-details">
-            <h2>Delivery Information</h2>
+        <div class="shipping-details">
+            <h2>Shipping Information</h2>
             <table>
                 <tr>
                     <th>Order Number:</th>
                     <td>#<span th:text="${orderId}"></span></td>
                 </tr>
                 <tr>
-                    <th>Delivery Date:</th>
+                    <th>Shipping Date:</th>
                     <td th:text="${#dates.format(#dates.createNow(), 'dd MMM yyyy')}">01 Jan 2025</td>
                 </tr>
                 <tr>
@@ -224,31 +212,28 @@
                     <div class="step-label active">Shipped</div>
                 </div>
                 <div class="progress-step">
-                    <div class="step-icon active">✓</div>
-                    <div class="step-label active">Delivered</div>
+                    <div class="step-icon">4</div>
+                    <div class="step-label">Delivered</div>
                 </div>
             </div>
         </div>
 
-        <div class="review-section">
-            <h3>How was your experience?</h3>
-            <p>We'd love to hear your feedback! Please take a moment to review your purchase.</p>
-            <div class="star-rating">★★★★★</div>
-            <a th:href="@{'http://localhost:4200/review-order/' + ${orderId}}" class="button">Write a Review</a>
-        </div>
-
-        <p>If you have any questions or need assistance with your delivered items, please don't hesitate to contact our customer service team.</p>
+        <p>You'll receive one more notification when your package has been delivered. You can also track your order status by clicking the button below.</p>
 
         <div style="text-align: center;">
-            <a href="http://localhost:4200/contact-us" class="button">Contact Customer Service</a>
+            <a th:href="@{'http://localhost:4200/order-details/' + ${orderId}}" class="button">Track Your Order</a>
         </div>
 
-        <p>Thank you for shopping with emart!</p>
+        <p>If you have any questions about your delivery, please contact our customer service team.</p>
+
+        <p>Thank you for shopping with us!</p>
         <p>The emart Team</p>
     </div>
 
     <div class="footer">
         <div class="social-links">
+            <a href="#"><img src="https://via.placeholder.com/32x32?text=FB" alt="Facebook" class="social-icon"></a>
+            <a href="#"><img src="https://via.placeholder.com/32x32?text=IG" alt="Instagram" class="social-icon"></a>
             <a href="#"><img src="https://via.placeholder.com/32x32?text=FB" alt="Facebook" class="social-icon"></a>
             <a href="#"><img src="https://via.placeholder.com/32x32?text=IG" alt="Instagram" class="social-icon"></a>
             <a href="#"><img src="https://via.placeholder.com/32x32?text=TW" alt="Twitter" class="social-icon"></a>
